@@ -43,7 +43,7 @@ public:
 			while (std::getline(namesFile, name))
 			{
 				originalNames.push_back(name);
-				names.push_back(std::string("@") + name + "$");
+				names.push_back(std::string(".") + name + ".");
 				single += name;
 			}
 
@@ -58,14 +58,15 @@ public:
 			characters.sort();
 
 			int count = 0;
+			stoi.insert(std::pair<char, int>('.', count++));
+
 			for (auto c : characters)
 			{
 				stoi.insert(std::pair<char, int>(c, count));
 				count++;
 			}
 
-			stoi.insert(std::pair<char, int>('@', count++));
-			stoi.insert(std::pair<char, int>('$', count++));
+			
 
 			n = new int* [count];
 			for (int i = 0; i < count; i++)
