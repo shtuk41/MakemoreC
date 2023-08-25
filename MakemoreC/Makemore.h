@@ -29,7 +29,7 @@ private:
 	std::map<char, int> stoi;
 	std::unordered_map<std::pair<char, char>, int, BigramHashFunction> bigramMap;
 	std::vector<std::pair<std::pair<char, char>, int>> bigramVector;
-
+	int** n;
 
 public:
 	void Init(std::string fileNames)
@@ -65,7 +65,7 @@ public:
 			}
 
 			stoi.insert(std::pair<char, int>('@', count++));
-			stoi.insert(std::pair<char, int>('$', count));
+			stoi.insert(std::pair<char, int>('$', count++));
 
 			n = new int* [count];
 			for (int i = 0; i < count; i++)
@@ -78,6 +78,11 @@ public:
 				for (int jj = 0; jj < ii.length() - 1; jj++)
 				{
 					auto bigram = std::pair<char, char>(ii[jj], ii[jj + 1]);
+
+					int i = stoi[ii[jj]];
+					int k = stoi[ii[jj + 1]];
+
+					n[i][k] += 1;
 
 					auto kk = bigramMap.find(bigram);
 
@@ -116,5 +121,5 @@ public:
 	std::vector<std::pair<std::pair<char, char>, int>>& BigramVector() { return bigramVector; };
 
 	int** N() { return n; }
-	int** n;
+
 };

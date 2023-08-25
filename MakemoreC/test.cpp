@@ -75,3 +75,10 @@ TEST_F(MakemoreTest, DISABLED_Print_Characters)
 	EXPECT_EQ(mm.Stoi()['@'], 26);
 	EXPECT_EQ(mm.Stoi()['$'], 27);
 }
+
+TEST_F(MakemoreTest, Check_N)
+{
+	EXPECT_EQ(mm.N()[0][0], 556);
+	EXPECT_EQ(mm.N()[0][1], 541);
+	EXPECT_EQ(mm.N()[7][13], 138);
+}
