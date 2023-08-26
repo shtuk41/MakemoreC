@@ -30,6 +30,7 @@ private:
 	std::map<char, int> stoi;
 	std::unordered_map<std::pair<char, char>, int, BigramHashFunction> bigramMap;
 	std::vector<std::pair<std::pair<char, char>, int>> bigramVector;
+	std::vector<std::vector<int>> bigramDistribution;
 	int** n;
 	int ROWS, COLUMNS;
 
@@ -103,6 +104,13 @@ public:
 			bigramVector = std::vector<std::pair<std::pair<char, char>, int>>(bigramMap.begin(), bigramMap.end());
 
 			std::sort(bigramVector.rbegin(), bigramVector.rend(), [](std::pair<std::pair<char, char>, int> a, std::pair<std::pair<char, char>, int> b) {return a.second < b.second; });
+		
+			for (int ii = 0; ii < ROWS; ii++)
+			{
+				std::vector<int> rowDistributionList(n[ii], n[ii] + COLUMNS);
+				bigramDistribution.push_back(rowDistributionList);
+			}
+		
 		}
 	}
 
@@ -133,17 +141,17 @@ public:
 		auto a = rd();
 		std::mt19937 gen(a);
 
-		std::vector<int> dist(n[rowNumber], n[rowNumber] + COLUMNS);
-
 		//std::cout << "row: " << rowNumber << std::endl;
 
-		/*for (auto i : dist)
+		auto rowVec = bigramDistribution[rowNumber];
+
+		/*for (auto i : rowVec)
 		{
 			std::cout << i << ',';
 		}
 		std::cout << '\n';*/
 
-		std::discrete_distribution<int> d(dist.begin(), dist.end());
+		std::discrete_distribution<int> d(rowVec.begin(), rowVec.end());
 
 		int ret = d(gen);
 		return ret;
