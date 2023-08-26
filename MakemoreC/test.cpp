@@ -1,6 +1,7 @@
 #include "pch.h"
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 #include <Makemore.h>
 
@@ -90,19 +91,32 @@ TEST_F(MakemoreTest, Sample_N)
 {
 	for (int ii = 0; ii < 20; ii++)
 	{
-		int ix = 0;
-		std::string out;
+		std::string out = mm.GetNameBySampling();
+		std::cout << out << "\n";
+	}
+}
 
-		while (true)
+TEST_F(MakemoreTest, BigramProbabilitiesCheck)
+{
+	for (int ii = 0; ii < 3; ii++)
+	{
+		auto name = mm.Names()[ii];
+
+		for (int jj = 0; jj < name.length() - 1; jj++)
 		{
-			ix = mm.SampleRow(ix);
-			char o = mm.Itos(ix);
-			out += o;
+			char ch1 = name[jj];
+			char ch2 = name[jj + 1];
+			int ix1 = mm.Stoi()[ch1];
+			int ix2 = mm.Stoi()[ch2];
 
-			if (ix == 0)
-				break;
+			double probability = mm.Probability(ix1, ix2);
+
+
+
+			std::cout << ch1 << ch2 << ", " << std::setprecision(3) << probability << std::endl;
 		}
 
-		std::cout << out << "\n";
+
+
 	}
 }

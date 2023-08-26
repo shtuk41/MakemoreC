@@ -157,6 +157,39 @@ public:
 		return ret;
 	}
 
+	std::string GetNameBySampling()
+	{
+		int ix = 0;
+		std::string out;
+
+		while (true)
+		{
+			ix = SampleRow(ix);
+			char o = Itos(ix);
+			out += o;
+
+			if (ix == 0)
+				break;
+		}
+
+		return out;
+
+	}
+
+	double Probability(int row, int col)
+	{
+		auto vecRow = bigramDistribution[row];
+
+		int sum = 0;
+
+		for (auto ii : vecRow)
+		{
+			sum += ii;
+		}
+
+		return (double)vecRow[col] / double(sum);
+	}
+
 	std::vector<std::string>& Names() { return names; }
 	std::vector<std::string>& OriginalNames() { return originalNames; }
 	std::list<char>& Characters() { return characters; }
