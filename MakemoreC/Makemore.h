@@ -74,7 +74,10 @@ public:
 			n = new int* [count];
 			for (int i = 0; i < count; i++)
 			{
-				n[i] = new int[count] {0};
+				n[i] = new int[count];
+
+				for (int j = 0; j < count; j++)
+					n[i][j] = 1;
 			}
 
 			for (auto ii : names)

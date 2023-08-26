@@ -79,12 +79,12 @@ TEST_F(MakemoreTest, DISABLED_Print_Characters)
 
 TEST_F(MakemoreTest, Check_N)
 {
-	EXPECT_EQ(mm.N()[1][1], 556);
-	EXPECT_EQ(mm.N()[1][2], 541);
-	EXPECT_EQ(mm.N()[8][14], 138);
-	EXPECT_EQ(mm.N()[0][8], 874);
-	EXPECT_EQ(mm.N()[1][0], 6640);
-	EXPECT_EQ(mm.N()[14][0], 6763);
+	EXPECT_EQ(mm.N()[1][1], 557);
+	EXPECT_EQ(mm.N()[1][2], 542);
+	EXPECT_EQ(mm.N()[8][14], 139);
+	EXPECT_EQ(mm.N()[0][8], 875);
+	EXPECT_EQ(mm.N()[1][0], 6641);
+	EXPECT_EQ(mm.N()[14][0], 6764);
 }
 
 TEST_F(MakemoreTest, Sample_N)
@@ -96,9 +96,12 @@ TEST_F(MakemoreTest, Sample_N)
 	}
 }
 
-TEST_F(MakemoreTest, BigramProbabilitiesCheck)
+TEST_F(MakemoreTest, NegativeLogLikelihood)
 {
-	for (int ii = 0; ii < 3; ii++)
+	double log_likeihood = 0.0;
+	double couunt = 0.0;
+
+	for (int ii = 0; ii < mm.Names().size(); ii++)
 	{
 		auto name = mm.Names()[ii];
 
@@ -110,13 +113,58 @@ TEST_F(MakemoreTest, BigramProbabilitiesCheck)
 			int ix2 = mm.Stoi()[ch2];
 
 			double probability = mm.Probability(ix1, ix2);
+			double logProb = log(probability);
+
+			log_likeihood += logProb;
+			couunt += 1.0;
 
 
 
-			std::cout << ch1 << ch2 << ", " << std::setprecision(3) << probability << std::endl;
+			//std::cout << ch1 << ch2 << ", " << std::setprecision(3) << probability << "  " << logProb << std::endl;
+		}
+	}
+
+	std::cout << "log_likelyHood: " << log_likeihood << std::endl;
+	std::cout << "negative log_likelyHood: " << -log_likeihood << std::endl;
+	std::cout << "normalized negative log_likelihood: " << -log_likeihood / couunt << std::endl;
+}
+
+TEST_F(MakemoreTest, LikelihoodKnownNames)
+{
+	std::vector<std::string> names;
+
+	names.push_back(".andrej.");
+	names.push_back(".andrejq.");
+	names.push_back(".aleksander.");
+	names.push_back(".nadia.");
+	names.push_back(".anton.");
+	names.push_back(".valeria.");
+
+	for (int ii = 0; ii < names.size(); ii++)
+	{
+		auto name = names[ii];
+		double log_likeihood = 0.0;
+		double couunt = 0.0;
+
+		for (int jj = 0; jj < name.length() - 1; jj++)
+		{
+			char ch1 = name[jj];
+			char ch2 = name[jj + 1];
+			int ix1 = mm.Stoi()[ch1];
+			int ix2 = mm.Stoi()[ch2];
+
+			double probability = mm.Probability(ix1, ix2);
+			double logProb = log(probability);
+
+			log_likeihood += logProb;
+			couunt += 1.0;
+
+			//std::cout << ch1 << ch2 << ", " << std::setprecision(3) << probability << "  " << logProb << std::endl;
 		}
 
-
-
+		std::cout << name << '\n';
+		std::cout << "log_likelyHood: " << log_likeihood << std::endl;
+		std::cout << "negative log_likelyHood: " << -log_likeihood << std::endl;
+		std::cout << "normalized negative log_likelihood: " << -log_likeihood / couunt << std::endl;
 	}
 }
