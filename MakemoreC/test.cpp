@@ -85,3 +85,24 @@ TEST_F(MakemoreTest, Check_N)
 	EXPECT_EQ(mm.N()[1][0], 6640);
 	EXPECT_EQ(mm.N()[14][0], 6763);
 }
+
+TEST_F(MakemoreTest, Sample_N)
+{
+	for (int ii = 0; ii < 20; ii++)
+	{
+		int ix = 0;
+		std::string out;
+
+		while (true)
+		{
+			ix = mm.SampleRow(ix);
+			char o = mm.Itos(ix);
+			out += o;
+
+			if (ix == 0)
+				break;
+		}
+
+		std::cout << out << "\n";
+	}
+}

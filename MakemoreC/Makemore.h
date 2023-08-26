@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <random>
 #include <ranges>
 #include <set>
 #include <string>
@@ -30,6 +31,7 @@ private:
 	std::unordered_map<std::pair<char, char>, int, BigramHashFunction> bigramMap;
 	std::vector<std::pair<std::pair<char, char>, int>> bigramVector;
 	int** n;
+	int ROWS, COLUMNS;
 
 public:
 	void Init(std::string fileNames)
@@ -66,7 +68,7 @@ public:
 				count++;
 			}
 
-			
+			ROWS = COLUMNS = count;
 
 			n = new int* [count];
 			for (int i = 0; i < count; i++)
@@ -112,6 +114,39 @@ public:
 		}
 
 		delete[] n;
+	}
+
+	char Itos(int num)
+	{
+		for (auto ii : stoi)
+		{
+			if (ii.second == num)
+				return ii.first;
+		}
+
+		throw std::exception(std::string(std::string("itos, num not found: ") + std::to_string(num)).c_str());
+	}
+
+	int SampleRow(int rowNumber)
+	{
+		std::random_device rd;
+		auto a = rd();
+		std::mt19937 gen(a);
+
+		std::vector<int> dist(n[rowNumber], n[rowNumber] + COLUMNS);
+
+		//std::cout << "row: " << rowNumber << std::endl;
+
+		/*for (auto i : dist)
+		{
+			std::cout << i << ',';
+		}
+		std::cout << '\n';*/
+
+		std::discrete_distribution<int> d(dist.begin(), dist.end());
+
+		int ret = d(gen);
+		return ret;
 	}
 
 	std::vector<std::string>& Names() { return names; }
