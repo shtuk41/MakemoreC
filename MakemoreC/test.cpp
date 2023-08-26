@@ -98,8 +98,8 @@ TEST_F(MakemoreTest, Sample_N)
 
 TEST_F(MakemoreTest, NegativeLogLikelihood)
 {
-	double log_likeihood = 0.0;
-	double couunt = 0.0;
+	float log_likeihood = 0.0;
+	float couunt = 0.0;
 
 	for (int ii = 0; ii < mm.Names().size(); ii++)
 	{
@@ -112,8 +112,8 @@ TEST_F(MakemoreTest, NegativeLogLikelihood)
 			int ix1 = mm.Stoi()[ch1];
 			int ix2 = mm.Stoi()[ch2];
 
-			double probability = mm.Probability(ix1, ix2);
-			double logProb = log(probability);
+			float probability = mm.Probability(ix1, ix2);
+			float logProb = log(probability);
 
 			log_likeihood += logProb;
 			couunt += 1.0;
@@ -126,7 +126,12 @@ TEST_F(MakemoreTest, NegativeLogLikelihood)
 
 	std::cout << "log_likelyHood: " << log_likeihood << std::endl;
 	std::cout << "negative log_likelyHood: " << -log_likeihood << std::endl;
-	std::cout << "normalized negative log_likelihood: " << -log_likeihood / couunt << std::endl;
+
+	float nll = -log_likeihood / couunt;
+
+	std::cout << "normalized negative log_likelihood: " << nll << std::endl;
+
+	EXPECT_NEAR(nll, 2.45436, 0.01f);
 }
 
 TEST_F(MakemoreTest, LikelihoodKnownNames)
@@ -135,16 +140,12 @@ TEST_F(MakemoreTest, LikelihoodKnownNames)
 
 	names.push_back(".andrej.");
 	names.push_back(".andrejq.");
-	names.push_back(".aleksander.");
-	names.push_back(".nadia.");
-	names.push_back(".anton.");
-	names.push_back(".valeria.");
 
 	for (int ii = 0; ii < names.size(); ii++)
 	{
 		auto name = names[ii];
-		double log_likeihood = 0.0;
-		double couunt = 0.0;
+		float log_likeihood = 0.0;
+		float couunt = 0.0;
 
 		for (int jj = 0; jj < name.length() - 1; jj++)
 		{
@@ -153,8 +154,8 @@ TEST_F(MakemoreTest, LikelihoodKnownNames)
 			int ix1 = mm.Stoi()[ch1];
 			int ix2 = mm.Stoi()[ch2];
 
-			double probability = mm.Probability(ix1, ix2);
-			double logProb = log(probability);
+			float probability = mm.Probability(ix1, ix2);
+			float logProb = log(probability);
 
 			log_likeihood += logProb;
 			couunt += 1.0;
@@ -165,6 +166,43 @@ TEST_F(MakemoreTest, LikelihoodKnownNames)
 		std::cout << name << '\n';
 		std::cout << "log_likelyHood: " << log_likeihood << std::endl;
 		std::cout << "negative log_likelyHood: " << -log_likeihood << std::endl;
-		std::cout << "normalized negative log_likelihood: " << -log_likeihood / couunt << std::endl;
+		float nnl = -log_likeihood / couunt;
+		std::cout << "normalized negative log_likelihood: " << nnl << std::endl;
+
+		switch (ii)
+		{
+		case 0: //andrej
+			EXPECT_NEAR(nnl, 3.03677f, 0.01f);
+			break;
+		case 1: //andrejq
+			EXPECT_NEAR(nnl, 3.4834f, 0.01f);
+			break;
+		}
+
 	}
 }
+
+TEST_F(MakemoreTest, BigramsTrainingSet)
+{
+	std::vector<int> xs, ys;
+
+
+	for (int ii = 0; ii < mm.Names().size(); ii++)
+	{
+		auto name = mm.Names()[ii];
+		for (int jj = 0; jj < name.length() - 1; jj++)
+		{
+			char ch1 = name[jj];
+			char ch2 = name[jj + 1];
+			int ix1 = mm.Stoi()[ch1];
+			int ix2 = mm.Stoi()[ch2];
+			xs.push_back(ix1);
+			ys.push_back(ix2);
+
+			std::cout << ch1 << ch2 << std::endl;
+		}
+
+		break;
+	}
+}
+

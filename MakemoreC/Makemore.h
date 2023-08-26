@@ -21,6 +21,15 @@ public:
 	}
 };
 
+class LikelihoodHashFunction
+{
+public:
+	size_t operator()(const std::pair<int, int>& p) const
+	{
+		return (size_t)(p.first * p.second);
+	}
+};
+
 class Makemore
 {
 private:
@@ -31,6 +40,7 @@ private:
 	std::unordered_map<std::pair<char, char>, int, BigramHashFunction> bigramMap;
 	std::vector<std::pair<std::pair<char, char>, int>> bigramVector;
 	std::vector<std::vector<int>> bigramDistribution;
+	std::unordered_map<std::pair<int,int>, float, LikelihoodHashFunction> logLiklihoodProbabilityMap;
 	int** n;
 	int ROWS, COLUMNS;
 
@@ -112,8 +122,20 @@ public:
 			{
 				std::vector<int> rowDistributionList(n[ii], n[ii] + COLUMNS);
 				bigramDistribution.push_back(rowDistributionList);
+
+				int sum = 0;
+
+				for (auto oo : rowDistributionList)
+				{
+					sum += oo;
+				}
+
+				for (int rr = 0; rr < COLUMNS; rr++)
+				{
+					logLiklihoodProbabilityMap[std::pair<int, int>(ii, rr)] = (float)rowDistributionList[rr] / float(sum);
+				}
+				
 			}
-		
 		}
 	}
 
@@ -179,18 +201,9 @@ public:
 
 	}
 
-	double Probability(int row, int col)
+	float Probability(int row, int col)
 	{
-		auto vecRow = bigramDistribution[row];
-
-		int sum = 0;
-
-		for (auto ii : vecRow)
-		{
-			sum += ii;
-		}
-
-		return (double)vecRow[col] / double(sum);
+		return logLiklihoodProbabilityMap[std::pair<int, int>(row, col)];
 	}
 
 	std::vector<std::string>& Names() { return names; }
@@ -201,5 +214,4 @@ public:
 	std::vector<std::pair<std::pair<char, char>, int>>& BigramVector() { return bigramVector; };
 
 	int** N() { return n; }
-
 };
