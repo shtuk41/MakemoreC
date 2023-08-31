@@ -2,8 +2,11 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <random>
 
+#include <functional.h>
 #include <Makemore.h>
+#include <neuron.h>
 
 class MakemoreTest : public ::testing::Test 
 {
@@ -118,8 +121,6 @@ TEST_F(MakemoreTest, NegativeLogLikelihood)
 			log_likeihood += logProb;
 			couunt += 1.0;
 
-
-
 			//std::cout << ch1 << ch2 << ", " << std::setprecision(3) << probability << "  " << logProb << std::endl;
 		}
 	}
@@ -160,7 +161,7 @@ TEST_F(MakemoreTest, LikelihoodKnownNames)
 			log_likeihood += logProb;
 			couunt += 1.0;
 
-			//std::cout << ch1 << ch2 << ", " << std::setprecision(3) << probability << "  " << logProb << std::endl;
+			std::cout << ch1 << ch2 << ", " << std::setprecision(3) << probability << "  " << logProb << std::endl;
 		}
 
 		std::cout << name << '\n';
@@ -178,14 +179,12 @@ TEST_F(MakemoreTest, LikelihoodKnownNames)
 			EXPECT_NEAR(nnl, 3.4834f, 0.01f);
 			break;
 		}
-
 	}
 }
 
 TEST_F(MakemoreTest, BigramsTrainingSet)
 {
 	std::vector<int> xs, ys;
-
 
 	for (int ii = 0; ii < mm.Names().size(); ii++)
 	{
@@ -203,6 +202,76 @@ TEST_F(MakemoreTest, BigramsTrainingSet)
 		}
 
 		break;
+	}
+}
+
+TEST_F(MakemoreTest, OneHot)
+{
+	auto t = one_hot<27>(13);
+
+	for (auto s = t.begin(); s != t.end(); ++s)
+	{
+		std::cout << *s << ',';
+	}
+
+	std::cout << std::endl;
+
+	std::array<int, 5> input{ 1, 2, 3, 4, 5 };
+
+	auto tt = one_hot<5, 27>(input);
+
+	for (auto it : tt)
+	{
+		for (auto s : it)
+		{
+			std::cout << s << ',';
+		}
+
+		std::cout << std::endl;
+	}
+}
+
+
+void make_input(std::vector<std::shared_ptr<value>>& x, int num, const float* ar)
+{
+	x.clear();
+
+	for (int ii = 0; ii < num; ii++)
+	{
+		x.push_back(std::make_shared<value>(value(ar[ii], std::string("input") + std::to_string(ii))));
+	}
+}
+
+TEST_F(MakemoreTest, Network)
+{
+	std::vector<int> layersizes;
+	layersizes.push_back(27);
+	
+	mlp m(27, layersizes);
+
+	std::vector<std::shared_ptr<value>> x;
+	
+	std::vector<std::shared_ptr<value>> input_values[5];
+	std::vector<std::shared_ptr<value>> results[5];
+
+	float inputs[5][27];
+
+	std::random_device rd{};
+	std::mt19937 gen{rd()};
+	std::normal_distribution<double> distribution(0.0, 1.0f);
+
+	for (int ii = 0; ii < 5; ii++)
+	{
+		for (int jj = 0; jj < 27; jj++)
+		{
+			inputs[ii][jj] = distribution(gen);
+		}
+	}
+
+	for (int ii = 0; ii < 5; ii++)
+	{
+		make_input(input_values[ii], 27, inputs[ii]);
+		results[ii] = m(input_values[ii]);
 	}
 }
 

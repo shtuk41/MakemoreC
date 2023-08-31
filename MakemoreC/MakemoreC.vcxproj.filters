@@ -3,11 +3,23 @@
   <ItemGroup>
     <ClCompile Include="test.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="value.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="makemorec.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Makemore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="neuron.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="functional.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="value.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
