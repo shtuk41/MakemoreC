@@ -10,6 +10,8 @@
 #include <neuron.h>
 #include <trace.h>
 
+//#define _PRINT
+
 class MakemoreTest : public ::testing::Test 
 {
 protected:
@@ -247,7 +249,11 @@ void make_input(std::vector<std::shared_ptr<value>>& x, int num, const std::arra
 
 TEST_F(MakemoreTest, Network)
 {
+	const int numberOfBigrams = 5;
+
 	std::vector<int> xs, ys;
+
+	int bigramCount = 0;
 
 	for (int ii = 0; ii < mm1.Names().size(); ii++)
 	{
@@ -262,6 +268,13 @@ TEST_F(MakemoreTest, Network)
 			ys.push_back(ix2);
 
 			std::cout << ch1 << ch2 << ',' << ix1 << ',' << ix2 << ',' << std::endl;
+
+			bigramCount++;
+
+			if (bigramCount >= numberOfBigrams)
+				break;
+			
+			
 		}
 	}
 
@@ -272,10 +285,10 @@ TEST_F(MakemoreTest, Network)
 
 	std::vector<std::shared_ptr<value>> x;
 
-	std::vector<std::shared_ptr<value>> input_values[5];
-	std::vector<std::shared_ptr<value>> results[5];
+	std::vector<std::shared_ptr<value>> input_values[numberOfBigrams];
+	std::vector<std::shared_ptr<value>> results[numberOfBigrams];
 
-	std::array<float, 27> inputs[5];
+	std::array<float, 27> inputs[numberOfBigrams];
 
 	int count = 0;
 
@@ -285,7 +298,7 @@ TEST_F(MakemoreTest, Network)
 		count++;
 	}
 
-	int labelCount = 0;
+	
 
 	std::vector<std::shared_ptr<value>> values;
 
@@ -294,41 +307,46 @@ TEST_F(MakemoreTest, Network)
 
 	std::vector<std::shared_ptr<value>> likelyhoods;
 
-
-	std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
-	values.push_back(localSum);
-	labelCount++;
-
 	for (int pass = 0; pass < 10; pass++)
 	{
+		int labelCount = 0;
+
 		values.clear();
 		localProbs.clear();
 		likelyhoods.clear();
 		probs.clear();
+
+		std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
+		values.push_back(localSum);
+		labelCount++;
 		
-		for (int ii = 0; ii < 5; ii++)
+		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
 			make_input(input_values[ii], 27, inputs[ii]);
 			results[ii] = m(input_values[ii]);
 
+#ifdef _PRINT
 			std::cout << "result " << ii << std::endl;
+#endif
 
 			for (auto jj : results[ii])
 			{
+#ifdef _PRINT
 				std::cout << *jj << ',';
+#endif
 
 				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount));
 				values.push_back(localSum);
 				labelCount++;
 			}
 
+#ifdef _PRINT
 			std::cout << '\n';
 
 			std::cout << "LocalSum: " << *localSum << std::endl;
 
 			std::cout << '[';
-
-			
+#endif
 
 			for (auto jj : results[ii])
 			{
@@ -336,10 +354,14 @@ TEST_F(MakemoreTest, Network)
 				localProbs.push_back(prob);
 				labelCount++;
 
+#ifdef _PRINT
 				std::cout << *prob << ',';
+#endif
 			}
 
-			std::cout << ']\n';
+#ifdef _PRINT
+			std::cout << "]\n";
+#endif
 
 			probs.push_back(localProbs);
 		}
@@ -348,7 +370,7 @@ TEST_F(MakemoreTest, Network)
 		values.push_back(oneNeg);
 		labelCount++;
 
-		for (int ii = 0; ii < 5; ii++)
+		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
 			auto likelyhood = std::make_shared<value>(value(probs[ii][ys[ii]]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount));
 			labelCount++;
@@ -364,18 +386,20 @@ TEST_F(MakemoreTest, Network)
 		values.push_back(totalLoss);
 		labelCount++;
 
-		for (int ii = 0; ii < 5; ii++)
+		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
 			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[ii])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount));
 			values.push_back(totalLoss);
 			labelCount++;
 		}
 
-		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>(5.0f, std::string("totalNumberOfLosses"));
+		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>((float)numberOfBigrams, std::string("totalNumberOfLosses"));
 
 		std::shared_ptr<value> loss = std::make_shared<value>(value(*totalLoss / *totalNumberOfLosses)); loss->set_label(std::string("loss"));
 
-		loss->set_grad(1.0);
+		//trace(*loss);
+
+		//loss->set_grad(1.0);
 		loss->backward();
 
 		//trace(*loss);
@@ -388,9 +412,9 @@ TEST_F(MakemoreTest, Network)
 
 		for (auto ii : params)
 		{
-			std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << '\n';
+			//std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << '\n';
 
-			ii->setData(*ii + 0.1f * ii->grad());
+			ii->setData(*ii - 0.1f * ii->grad());
 			ii->set_grad(0.0f);
 		}
 
@@ -398,3 +422,5 @@ TEST_F(MakemoreTest, Network)
 		//	trace(*loss);
 	}
 }
+
+
