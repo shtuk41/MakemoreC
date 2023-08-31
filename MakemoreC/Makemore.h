@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <optional>
 #include <random>
 #include <ranges>
 #include <set>
@@ -45,19 +46,29 @@ private:
 	int ROWS, COLUMNS;
 
 public:
-	void Init(std::string fileNames)
+	void Init(std::string fileNames, std::optional<int> worldToReads)
 	{
 		std::ifstream namesFile(fileNames);
+
+		
 
 		if (namesFile.is_open())
 		{
 			std::string name;
 			std::string single;
+
+			int countWorlds = 0;
+
 			while (std::getline(namesFile, name))
 			{
 				originalNames.push_back(name);
 				names.push_back(std::string(".") + name + ".");
 				single += name;
+				
+				countWorlds++;
+
+				if (countWorlds >= worldToReads.value_or(1000000))
+					break;
 			}
 
 			std::set<char> singleSet;

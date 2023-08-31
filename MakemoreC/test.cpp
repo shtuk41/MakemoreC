@@ -3,19 +3,23 @@
 #include <iostream>
 #include <iomanip>
 #include <random>
+#include <memory>
 
 #include <functional.h>
 #include <Makemore.h>
 #include <neuron.h>
+#include <trace.h>
 
 class MakemoreTest : public ::testing::Test 
 {
 protected:
 	Makemore mm;
+	Makemore mm1;
 
 	void SetUp() override
 	{
-		mm.Init("names.txt");
+		mm.Init("names.txt", std::nullopt);
+		mm1.Init("names.txt", 1);
 	}
 
 	void TearDown() override
@@ -231,47 +235,166 @@ TEST_F(MakemoreTest, OneHot)
 	}
 }
 
-
-void make_input(std::vector<std::shared_ptr<value>>& x, int num, const float* ar)
+void make_input(std::vector<std::shared_ptr<value>>& x, int num, const std::array<float, 27> &arr)
 {
 	x.clear();
 
 	for (int ii = 0; ii < num; ii++)
 	{
-		x.push_back(std::make_shared<value>(value(ar[ii], std::string("input") + std::to_string(ii))));
+		x.push_back(std::make_shared<value>(value(arr[ii], std::string("input") + std::to_string(ii))));
 	}
 }
 
 TEST_F(MakemoreTest, Network)
 {
-	std::vector<int> layersizes;
-	layersizes.push_back(27);
-	
-	mlp m(27, layersizes);
+	std::vector<int> xs, ys;
 
-	std::vector<std::shared_ptr<value>> x;
-	
-	std::vector<std::shared_ptr<value>> input_values[5];
-	std::vector<std::shared_ptr<value>> results[5];
-
-	float inputs[5][27];
-
-	std::random_device rd{};
-	std::mt19937 gen{rd()};
-	std::normal_distribution<double> distribution(0.0, 1.0f);
-
-	for (int ii = 0; ii < 5; ii++)
+	for (int ii = 0; ii < mm1.Names().size(); ii++)
 	{
-		for (int jj = 0; jj < 27; jj++)
+		auto name = mm1.Names()[ii];
+		for (int jj = 0; jj < name.length() - 1; jj++)
 		{
-			inputs[ii][jj] = distribution(gen);
+			char ch1 = name[jj];
+			char ch2 = name[jj + 1];
+			int ix1 = mm1.Stoi()[ch1];
+			int ix2 = mm1.Stoi()[ch2];
+			xs.push_back(ix1);
+			ys.push_back(ix2);
+
+			std::cout << ch1 << ch2 << ',' << ix1 << ',' << ix2 << ',' << std::endl;
 		}
 	}
 
-	for (int ii = 0; ii < 5; ii++)
+	std::vector<int> layersizes;
+	layersizes.push_back(27);
+
+	mlp m(27, layersizes);
+
+	std::vector<std::shared_ptr<value>> x;
+
+	std::vector<std::shared_ptr<value>> input_values[5];
+	std::vector<std::shared_ptr<value>> results[5];
+
+	std::array<float, 27> inputs[5];
+
+	int count = 0;
+
+	for (auto ii : xs)
 	{
-		make_input(input_values[ii], 27, inputs[ii]);
-		results[ii] = m(input_values[ii]);
+		inputs[count] = one_hot<27>(ii);
+		count++;
+	}
+
+	int labelCount = 0;
+
+	std::vector<std::shared_ptr<value>> values;
+
+	std::vector<std::vector<std::shared_ptr<value>>> probs;
+	std::vector<std::shared_ptr<value>> localProbs;
+
+	std::vector<std::shared_ptr<value>> likelyhoods;
+
+
+	std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
+	values.push_back(localSum);
+	labelCount++;
+
+	for (int pass = 0; pass < 10; pass++)
+	{
+		values.clear();
+		localProbs.clear();
+		likelyhoods.clear();
+		probs.clear();
+		
+		for (int ii = 0; ii < 5; ii++)
+		{
+			make_input(input_values[ii], 27, inputs[ii]);
+			results[ii] = m(input_values[ii]);
+
+			std::cout << "result " << ii << std::endl;
+
+			for (auto jj : results[ii])
+			{
+				std::cout << *jj << ',';
+
+				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount));
+				values.push_back(localSum);
+				labelCount++;
+			}
+
+			std::cout << '\n';
+
+			std::cout << "LocalSum: " << *localSum << std::endl;
+
+			std::cout << '[';
+
+			
+
+			for (auto jj : results[ii])
+			{
+				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount));
+				localProbs.push_back(prob);
+				labelCount++;
+
+				std::cout << *prob << ',';
+			}
+
+			std::cout << ']\n';
+
+			probs.push_back(localProbs);
+		}
+
+		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
+		values.push_back(oneNeg);
+		labelCount++;
+
+		for (int ii = 0; ii < 5; ii++)
+		{
+			auto likelyhood = std::make_shared<value>(value(probs[ii][ys[ii]]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount));
+			labelCount++;
+			values.push_back(likelyhood);
+
+			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount));
+			labelCount++;
+
+			likelyhoods.push_back(likelyhoodNeg);
+		}
+
+		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount));
+		values.push_back(totalLoss);
+		labelCount++;
+
+		for (int ii = 0; ii < 5; ii++)
+		{
+			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[ii])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount));
+			values.push_back(totalLoss);
+			labelCount++;
+		}
+
+		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>(5.0f, std::string("totalNumberOfLosses"));
+
+		std::shared_ptr<value> loss = std::make_shared<value>(value(*totalLoss / *totalNumberOfLosses)); loss->set_label(std::string("loss"));
+
+		loss->set_grad(1.0);
+		loss->backward();
+
+		//trace(*loss);
+
+		std::cout << "LOSS IS: " << *loss << std::endl;
+
+		auto params = m.parameters();
+
+		std::cout << "size parameters: " << params.size() << std::endl;
+
+		for (auto ii : params)
+		{
+			std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << '\n';
+
+			ii->setData(*ii + 0.1f * ii->grad());
+			ii->set_grad(0.0f);
+		}
+
+		//if (pass > 0)
+		//	trace(*loss);
 	}
 }
-

@@ -6,6 +6,9 @@
     <ClCompile Include="value.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="trace.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="makemorec.h" />
@@ -20,6 +23,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="trace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

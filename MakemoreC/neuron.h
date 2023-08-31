@@ -21,7 +21,7 @@ public:
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_real_distribution<float> dis(-1.0, 1.0);
+		std::normal_distribution<double> dis(0.0, 1.0f);
 
 		for (int ii = 0; ii < nin; ii++)
 		{
@@ -83,12 +83,11 @@ public:
 			count++;
 		}
 
-
 		auto act = std::make_shared<value>(value(*values.back())); act->set_label(std::string("act") + std::to_string(count));
 		count++;
 		values.push_back(act);
 
-		out = std::make_shared<value>(value(values.back()->tanh())); out->set_label(std::string("out") + std::to_string(count));
+		out = std::make_shared<value>(value(values.back()->exp())); out->set_label(std::string("out") + std::to_string(count));
 		count++;
 
 		values_mem.push_back(values);
