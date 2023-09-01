@@ -307,7 +307,7 @@ TEST_F(MakemoreTest, Network)
 
 	std::vector<std::shared_ptr<value>> likelyhoods;
 
-	for (int pass = 0; pass < 10; pass++)
+	for (int pass = 0; pass < 40; pass++)
 	{
 		int labelCount = 0;
 
@@ -404,7 +404,7 @@ TEST_F(MakemoreTest, Network)
 
 		//trace(*loss);
 
-		std::cout << "LOSS IS: " << *loss << std::endl;
+		std::cout << "pass: " << pass << " , LOSS IS: " << *loss << std::endl;
 
 		auto params = m.parameters();
 
@@ -464,14 +464,22 @@ TEST_F(MakemoreTest, Network_ALL)
 
 	std::vector<std::shared_ptr<value>> likelyhoods;
 
-	for (int pass = 0; pass < 10; pass++)
+	for (int pass = 0; pass < 400; pass++)
 	{
 		int labelCount = 0;
 
 		values.clear();
 		localProbs.clear();
 		likelyhoods.clear();
+
+		for (auto& p : probs)
+		{
+			p.clear();
+		}
+
 		probs.clear();
+
+		m.clear();
 
 		std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
 		values.push_back(localSum);
@@ -561,7 +569,7 @@ TEST_F(MakemoreTest, Network_ALL)
 
 		//trace(*loss);
 
-		std::cout << "LOSS IS: " << *loss << std::endl;
+		std::cout << "pass: " << pass << " , LOSS IS: " << *loss << std::endl;
 
 		auto params = m.parameters();
 
@@ -576,22 +584,47 @@ TEST_F(MakemoreTest, Network_ALL)
 		}
 	}
 
-	//std::array<float, 27> input;
-	//std::vector<std::shared_ptr<value>> input_value;
-	//std::vector<std::shared_ptr<value>> result;
+	std::array<float, 27> input;
+	
+	std::random_device rd;
+	auto a = rd();
+	std::mt19937 gen(a);
 
-	//input = one_hot<27>(1);
+	input = one_hot<27>(0);
 
-	//make_input(input_value, 27, input);
-	//result = m(input_value);
+	for (int ii = 0; ii < 20; ii++)
+	{
+		std::string name;
+		
+		while (true)
+		{
+			std::vector<std::shared_ptr<value>> input_value;
+			std::vector<std::shared_ptr<value>> result;
 
-	//std::random_device rd;
-	//auto a = rd();
-	//std::mt19937 gen(a);
+			make_input(input_value, 27, input);
+			result = m(input_value);
 
-	//std::discrete_distribution<int> d(result.begin(), result.end());
+			std::vector<float> resultsFloat;
 
-	//auto ret = d(gen);
+			for (auto r : result)
+			{
+				resultsFloat.push_back(*r);
+			}
+
+			std::discrete_distribution<int> d(resultsFloat.begin(), resultsFloat.end());
+
+			int x = d(gen);
+
+			if (x == 0)
+				break;
+
+			name += mm.Itos(x);
+
+			input = one_hot<27>(x);
+		}
+
+		std::cout << name << std::endl;
+	}
 
 
 
