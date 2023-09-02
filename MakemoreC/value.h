@@ -22,6 +22,7 @@ private:
 	std::vector<value*> _prev;
 	std::string _op;
 	std::string _label;
+	static unsigned int numberOfOperations;
 
 public:
 	value(float d, std::string _label = std::string(""), std::vector<value*> v = std::vector<value*>(), const char* _op = "") : data(d), _op(_op), _label(_label), _grad(0.0f)
@@ -83,6 +84,8 @@ public:
 
 		value out = value(this->data + other.data, "", nv, "+");
 
+		numberOfOperations++;
+
 		return out;
 	}
 
@@ -95,12 +98,15 @@ public:
 
 		value out = value(this->data - other.data, "", nv, "-");
 
+		numberOfOperations++;
+
 		return out;
 	}
 
 	value operator+(float other)
 	{
 		this->data += other;
+		numberOfOperations++;
 		return *this;
 	}
 
@@ -113,6 +119,8 @@ public:
 
 		value out = value(this->data * other.data, "", nv, "*");
 
+		numberOfOperations++;
+
 		return out;
 	}
 
@@ -124,6 +132,8 @@ public:
 		nv.push_back(&other);
 
 		value out = value(this->data / other.data, "", nv, "/");
+
+		numberOfOperations++;
 
 		return out;
 	}
@@ -147,6 +157,8 @@ public:
 		float t = (std::pow(M_E, 2.0f * data) - 1.0f) / (std::pow(M_E, 2.0f * data) + 1.0f);
 		auto out = value(t, "", nv, "tanh");
 
+		numberOfOperations++;
+
 		return out;
 	}
 
@@ -158,6 +170,8 @@ public:
 
 		float t = std::pow(M_E, data);
 		auto out = value(t, "", nv, "exp");
+
+		numberOfOperations++;
 
 		return out;
 	}
@@ -172,6 +186,8 @@ public:
 		float t = std::pow(data, other);
 		auto out = value(t, "", nv, "pow");
 
+		numberOfOperations++;
+
 		return out;
 	}
 
@@ -183,6 +199,8 @@ public:
 
 		float t = std::log(data);
 		auto out = value(t, "", nv, "log");
+
+		numberOfOperations++;
 
 		return out;
 	}
@@ -277,3 +295,4 @@ public:
 
 value operator+(float f, value& v);
 value operator*(float f, value& v);
+
