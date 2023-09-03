@@ -296,8 +296,6 @@ TEST_F(MakemoreTest, Network)
 
 	mlp m(5, layersizes);
 
-	std::vector<std::shared_ptr<value>> x;
-
 	std::vector<std::shared_ptr<value>> input_values[numberOfBigrams];
 	std::vector<std::shared_ptr<value>> results[numberOfBigrams];
 
@@ -320,6 +318,7 @@ TEST_F(MakemoreTest, Network)
 
 	for (int pass = 0; pass < 40; pass++)
 	{
+		
 		int labelCount = 0;
 
 		values.clear();
@@ -338,6 +337,7 @@ TEST_F(MakemoreTest, Network)
 
 			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
 			values.push_back(localSum);
+			value::all_values.push_back(localSum);
 			labelCount++;
 
 			for (auto jj : results[ii])
@@ -347,6 +347,7 @@ TEST_F(MakemoreTest, Network)
 #endif
 				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount));
 				values.push_back(localSum);
+				value::all_values.push_back(localSum);
 				labelCount++;
 			}
 
@@ -369,6 +370,7 @@ TEST_F(MakemoreTest, Network)
 			{
 				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount));
 				localProbs.push_back(prob);
+				value::all_values.push_back(prob);
 				labelCount++;
 
 				//if (ii == 1)
@@ -388,6 +390,7 @@ TEST_F(MakemoreTest, Network)
 
 		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
 		values.push_back(oneNeg);
+		value::all_values.push_back(oneNeg);
 		labelCount++;
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
@@ -395,35 +398,43 @@ TEST_F(MakemoreTest, Network)
 			auto likelyhood = std::make_shared<value>(value(probs[ii][ys[ii]]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount));
 			labelCount++;
 			values.push_back(likelyhood);
+			value::all_values.push_back(likelyhood);
 
 			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount));
 			labelCount++;
 
 			likelyhoods.push_back(likelyhoodNeg);
+			value::all_values.push_back(likelyhoodNeg);
 		}
 
 		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount));
 		values.push_back(totalLoss);
+		value::all_values.push_back(totalLoss);
 		labelCount++;
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
 			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[ii])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount));
 			values.push_back(totalLoss);
+			value::all_values.push_back(totalLoss);
 			labelCount++;
 		}
 
 		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>((float)numberOfBigrams, std::string("totalNumberOfLosses"));
+		value::all_values.push_back(totalNumberOfLosses);
 
 		std::shared_ptr<value> loss = std::make_shared<value>(value(*totalLoss / *totalNumberOfLosses)); loss->set_label(std::string("loss"));
+		value::all_values.push_back(loss);
 
 		//trace(*loss);
 
 		//loss->set_grad(1.0);
+
 		loss->backward();
 
 		//trace(*loss);
 
+		
 
 
 		std::cout << "pass: " << pass << " , LOSS IS: " << *loss << std::endl;
@@ -464,6 +475,9 @@ TEST_F(MakemoreTest, Network)
 		}
 
 		monitor << "\n";
+
+		value::all_values.clear();
+		value::all_weights.clear();
 
 		//if (pass > 0)
 		//	trace(*loss);
@@ -517,7 +531,7 @@ TEST_F(MakemoreTest, Network_ALL)
 	std::vector<std::shared_ptr<value>> likelyhoods;
 	
 
-	for (int pass = 0; pass < 40; pass++)
+	for (int pass = 0; pass < 100; pass++)
 	{
 		int labelCount = 0;
 
@@ -542,6 +556,7 @@ TEST_F(MakemoreTest, Network_ALL)
 #endif
 			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
 			values.push_back(localSum);
+			value::all_values.push_back(localSum);
 			labelCount++;
 
 
@@ -553,6 +568,7 @@ TEST_F(MakemoreTest, Network_ALL)
 
 				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount));
 				values.push_back(localSum);
+				value::all_values.push_back(localSum);
 				labelCount++;
 			}
 
@@ -570,6 +586,7 @@ TEST_F(MakemoreTest, Network_ALL)
 			{
 				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount));
 				localProbs.push_back(prob);
+				value::all_values.push_back(prob);
 				labelCount++;
 
 #ifdef _PRINT
@@ -586,36 +603,41 @@ TEST_F(MakemoreTest, Network_ALL)
 
 		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
 		values.push_back(oneNeg);
+		value::all_values.push_back(oneNeg);
 		labelCount++;
-
-		
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
 			auto likelyhood = std::make_shared<value>(value(probs[ii][ys[ii]]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount));
 			labelCount++;
 			values.push_back(likelyhood);
+			value::all_values.push_back(likelyhood);
 
 			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount));
 			labelCount++;
+			value::all_values.push_back(likelyhoodNeg);
 
 			likelyhoods.push_back(likelyhoodNeg);
 		}
 
 		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount));
 		values.push_back(totalLoss);
+		value::all_values.push_back(totalLoss);
 		labelCount++;
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
 			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[ii])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount));
 			values.push_back(totalLoss);
+			value::all_values.push_back(totalLoss);
 			labelCount++;
 		}
 
 		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>((float)numberOfBigrams, std::string("totalNumberOfLosses"));
+		value::all_values.push_back(totalNumberOfLosses);
 
 		std::shared_ptr<value> loss = std::make_shared<value>(value(*totalLoss / *totalNumberOfLosses)); loss->set_label(std::string("loss"));
+		value::all_values.push_back(loss);
 
 		//trace(*loss);
 
@@ -640,13 +662,16 @@ TEST_F(MakemoreTest, Network_ALL)
 
 			float grad = ii->grad();
 			float value = *ii;
-			float newvalue = *ii - 50.0f * ii->grad();
+			float newvalue = *ii - 200.0 * ii->grad();
 
 			ii->setData(newvalue);
 			ii->set_grad(0.0f);
 		}
 
 		//monitor << "\n";
+
+		value::all_values.clear();
+		value::all_weights.clear();
 	}
 
 	//monitor.close();
@@ -692,11 +717,6 @@ TEST_F(MakemoreTest, Network_ALL)
 
 		std::cout << name << std::endl;
 	}
-}
-
-int main(int argc, char** argv) {
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
 }
 
 

@@ -18,7 +18,7 @@ private:
 	static int count;
 
 public:
-	neuron(int nin) :numberOfInputs(nin), out(std::make_shared<value>(-9999999.9f, "invalid"))
+	neuron(int nin) :numberOfInputs(nin)//, out(std::make_shared<value>(-9999999.9f, "invalid"))
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -66,8 +66,11 @@ public:
 
 		while (itw != weights.end() && iti != inputs.end())
 		{
+			value::all_weights.push_back(*itw);
+			value::all_weights.push_back(*iti);
 			auto mult = std::make_shared<value>(value(*(*itw) * **iti)); mult->set_label(std::string("neu_mult") + std::to_string(count));
 			values.push_back(mult);
+			value::all_weights.push_back(mult);
 			count++;
 			++itw;
 			++iti;
@@ -75,21 +78,25 @@ public:
 
 		std::shared_ptr<value> zero = std::make_shared<value>(0.0f, std::string("neu_zero") + std::to_string(count));
 		values.push_back(zero);
+		value::all_weights.push_back(zero);
 		count++;
 
 		for (int ii = 0; ii < numberOfInputs; ii++)
 		{
 			zero = std::make_shared<value>(value(*zero + *values[ii])); zero->set_label(std::string("neu_add") + std::to_string(count));
 			values.push_back(zero);
+			value::all_weights.push_back(zero);
 			count++;
 		}
 
 		auto act = std::make_shared<value>(value(*values.back())); act->set_label(std::string("neu_act") + std::to_string(count));
 		count++;
 		values.push_back(act);
+		value::all_weights.push_back(act);
 
 		out = std::make_shared<value>(value(values.back()->exp())); out->set_label(std::string("neu_out") + std::to_string(count));
 		count++;
+		value::all_weights.push_back(out);
 
 		values_mem.push_back(values);
 

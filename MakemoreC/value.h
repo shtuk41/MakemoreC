@@ -2,11 +2,12 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
-
+#include <chrono>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <functional>
+
 
 #ifndef M_E
 #define M_E 2.71828182845904523536f
@@ -23,6 +24,7 @@ private:
 	std::string _op;
 	std::string _label;
 	static unsigned int numberOfOperations;
+	
 
 public:
 	value(float d, std::string _label = std::string(""), std::vector<value*> v = std::vector<value*>(), const char* _op = "") : data(d), _op(_op), _label(_label), _grad(0.0f)
@@ -82,7 +84,9 @@ public:
 		nv.push_back(this);
 		nv.push_back(&other);
 
-		value out = value(this->data + other.data, "", nv, "+");
+		std::string label = std::string("add") + this->label() + other.label();
+
+		value out = value(this->data + other.data, label, nv, "+");
 
 		numberOfOperations++;
 
@@ -96,7 +100,9 @@ public:
 		nv.push_back(this);
 		nv.push_back(&other);
 
-		value out = value(this->data - other.data, "", nv, "-");
+		std::string label = std::string("sub") + this->label() + other.label();
+
+		value out = value(this->data - other.data, label, nv, "-");
 
 		numberOfOperations++;
 
@@ -117,7 +123,9 @@ public:
 		nv.push_back(this);
 		nv.push_back(&other);
 
-		value out = value(this->data * other.data, "", nv, "*");
+		std::string label = std::string("mult") +  this->label() + other.label();
+
+		value out = value(this->data * other.data, label, nv, "*");
 
 		numberOfOperations++;
 
@@ -131,7 +139,9 @@ public:
 		nv.push_back(this);
 		nv.push_back(&other);
 
-		value out = value(this->data / other.data, "", nv, "/");
+		std::string label = std::string("div") + this->label() + other.label();
+
+		value out = value(this->data / other.data, label, nv, "/");
 
 		numberOfOperations++;
 
@@ -154,8 +164,10 @@ public:
 
 		nv.push_back(this);
 
+		std::string label = std::string("tanh") + this->label();
+
 		float t = (std::pow(M_E, 2.0f * data) - 1.0f) / (std::pow(M_E, 2.0f * data) + 1.0f);
-		auto out = value(t, "", nv, "tanh");
+		auto out = value(t, label, nv, "tanh");
 
 		numberOfOperations++;
 
@@ -168,8 +180,10 @@ public:
 
 		nv.push_back(this);
 
+		std::string label = std::string("exp") + this->label();
+
 		float t = std::pow(M_E, data);
-		auto out = value(t, "", nv, "exp");
+		auto out = value(t, label, nv, "exp");
 
 		numberOfOperations++;
 
@@ -183,8 +197,10 @@ public:
 		nv.push_back(this);
 		nv.push_back(&other);
 
+		std::string label = std::string("pow") + this->label();
+
 		float t = std::pow(data, other);
-		auto out = value(t, "", nv, "pow");
+		auto out = value(t, label, nv, "pow");
 
 		numberOfOperations++;
 
@@ -197,40 +213,14 @@ public:
 
 		nv.push_back(this);
 
+		std::string label = std::string("log") + this->label();
+
 		float t = std::log(data);
-		auto out = value(t, "", nv, "log");
+		auto out = value(t, label, nv, "log");
 
 		numberOfOperations++;
 
 		return out;
-	}
-
-	std::vector<value*> topo;
-	std::vector<value*> visited;
-
-	void build_topo(value* v)
-	{
-		bool visit = false;
-
-		for (auto jj : visited)
-		{
-			if (jj == v)
-			{
-				visit = true;
-				break;
-			}
-		}
-
-		if (!visit)
-		{
-			visited.push_back(v);
-
-			for (auto ii : v->prev())
-			{
-				build_topo(ii);
-			}
-			topo.push_back(v);
-		}
 	}
 
 	void calc_backward()
@@ -275,22 +265,78 @@ public:
 		return;
 	}
 
+	std::vector<value*> topo;
+	std::vector<value*> visited;
+
+	void build_topo(value* v)
+	{
+		bool visit = false;
+
+		for (auto jj : visited)
+		{
+			if (jj == v)
+			{
+				visit = true;
+				break;
+			}
+		}
+
+		if (!visit)
+		{
+			visited.push_back(v);
+
+			for (auto ii : v->prev())
+			{
+				build_topo(ii);
+			}
+			topo.push_back(v);
+		}
+	}
+
 	void backward()
 	{
-		topo.clear();
-		visited.clear();
+		//auto start = std::chrono::high_resolution_clock::now();
+
+		//topo.clear();
+		//visited.clear();
 
 		_grad = 1.0f;
 
-		build_topo(this);
+		//build_topo(this);
+		//auto stop = std::chrono::high_resolution_clock::now();
+		//auto topoduration = duration_cast<std::chrono::seconds>(stop - start);
+		//std::cout << "Topo discovery took: " << topoduration.count() << " seconds. " << std::endl;
 
-		std::cout << "TOPO SIZE: " << topo.size() << std::endl;
+		//std::cout << "TOPO SIZE: " << topo.size() << std::endl;
+		
+		auto start = std::chrono::high_resolution_clock::now();
 
-		for (auto it = topo.rbegin(); it != topo.rend(); ++it)
+		//for (auto it = topo.rbegin(); it != topo.rend(); ++it)
+		//{
+		//	(*it)->calc_backward();
+		//}
+
+		for (auto it = value::all_values.rbegin() ; it != value::all_values.rend(); ++it)
 		{
+			//std::cout << "backwards: " << (*it)->label() << "\n";
 			(*it)->calc_backward();
 		}
+
+		for (auto it = value::all_weights.rbegin(); it != value::all_weights.rend(); ++it)
+		{
+			//std::cout << "backwards weights: " << (*it)->label() << "\n";
+			(*it)->calc_backward();
+		}
+
+		auto stop = std::chrono::high_resolution_clock::now();
+
+		auto calcduration = duration_cast<std::chrono::microseconds>(stop - start);
+
+		std::cout << "Calc backward took: " << calcduration.count() << " microseconds. " << std::endl;
 	}
+
+	static std::vector<std::shared_ptr<value>> all_values;
+	static std::vector <std::shared_ptr<value>> all_weights;
 };
 
 value operator+(float f, value& v);
