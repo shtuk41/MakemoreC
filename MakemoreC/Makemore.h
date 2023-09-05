@@ -46,7 +46,7 @@ private:
 	int ROWS, COLUMNS;
 
 public:
-	void Init(std::string fileNames, std::optional<int> worldToReads)
+	void Init(std::string fileNames, std::optional<int> wordToReads)
 	{
 		std::ifstream namesFile(fileNames);
 
@@ -57,7 +57,7 @@ public:
 			std::string name;
 			std::string single;
 
-			int countWorlds = 0;
+			int countWorls = 0;
 
 			while (std::getline(namesFile, name))
 			{
@@ -65,9 +65,9 @@ public:
 				names.push_back(std::string(".") + name + ".");
 				single += name;
 				
-				countWorlds++;
+				countWorls++;
 
-				if (countWorlds >= worldToReads.value_or(1000000))
+				if (countWorls >= wordToReads.value_or(1000000))
 					break;
 			}
 

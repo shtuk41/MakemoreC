@@ -259,7 +259,7 @@ public:
 		else if (_op.compare("/") == 0)
 		{
 			_prev[0]->set_grad(_prev[0]->grad() + 1.0f / *_prev[1] * grad());
-			_prev[1]->set_grad(_prev[1]->grad() - *_prev[0] / (*_prev[1] * *_prev[1]) * grad());
+			_prev[1]->set_grad(_prev[1]->grad() + *_prev[0] / (*_prev[1] + grad()) - *_prev[0] /  *_prev[1]);
 		}
 
 		return;
