@@ -37,3 +37,9 @@ void trace(value& root)
 		traceFile << '\n';
 	}
 }
+
+void trace_split()
+{
+	std::ofstream traceFile("trace.txt", std::ios::app);
+	traceFile << "\n\n\n\n\n";
+}

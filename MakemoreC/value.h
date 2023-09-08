@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <fstream>
 
 
 #ifndef M_E
@@ -166,7 +167,7 @@ public:
 
 		std::string label = std::string("tanh") + this->label();
 
-		float t = (std::pow(M_E, 2.0f * data) - 1.0f) / (std::pow(M_E, 2.0f * data) + 1.0f);
+		float t = (float)(std::pow(M_E, 2.0f * data) - 1.0f) / (std::pow(M_E, 2.0f * data) + 1.0f);
 		auto out = value(t, label, nv, "tanh");
 
 		numberOfOperations++;
@@ -225,43 +226,195 @@ public:
 
 	void calc_backward()
 	{
+#ifdef _DEBUG
+		std::ofstream traceFile("trace.txt", std::ios::app);
+		traceFile << "starting " <<  this->label()  << "\n";
+#endif
+
+
+
 		if (_op.compare("tanh") == 0)
 		{
+#ifdef _DEBUG
+			traceFile << "operation tanh\n";
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << *_prev[0] << "\n";
+#endif
+
 			_prev[0]->set_grad(_prev[0]->grad() + (1.0f - std::pow(data, 2.0f)) * grad());
+
+#ifdef _DEBUG
+			traceFile << "after change\n";
+
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+#endif
 		}
 		else if (_op.compare("+") == 0)
 		{
+#ifdef _DEBUG
+			traceFile << "operation +\n";
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+			traceFile << _prev[1]->label() << " prev[0] gradient: " << _prev[1]->grad() << "\n";
+			traceFile << _prev[1]->label() << " prev[0] data: " << float(*_prev[1]) << "\n";
+#endif
+
 			_prev[0]->set_grad(_prev[0]->grad() + 1.0f * grad());
 			_prev[1]->set_grad(_prev[1]->grad() + 1.0f * grad());
+
+#ifdef _DEBUG
+			traceFile << "after change\n";
+
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+			traceFile << _prev[1]->label() << " prev[0] gradient: " << _prev[1]->grad() << "\n";
+			traceFile << _prev[1]->label() << " prev[0] data: " << float(*_prev[1]) << "\n";
+#endif
 		}
 		else if (_op.compare("-") == 0)
 		{
+#ifdef _DEBUG
+			traceFile << "operation -\n";
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+			traceFile << _prev[1]->label() << " prev[0] gradient: " << _prev[1]->grad() << "\n";
+			traceFile << _prev[1]->label() << " prev[0] data: " << float(*_prev[1]) << "\n";
+#endif
+
 			_prev[0]->set_grad(_prev[0]->grad() + 1.0f * grad());
 			_prev[1]->set_grad(_prev[1]->grad() + 1.0f * grad());
+#ifdef _DEBUG
+			traceFile << "after change\n";
+
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+			traceFile << _prev[1]->label() << " prev[0] gradient: " << _prev[1]->grad() << "\n";
+			traceFile << _prev[1]->label() << " prev[0] data: " << float(*_prev[1]) << "\n";
+#endif
 		}
 		else if (_op.compare("*") == 0)
 		{
-			_prev[0]->set_grad(_prev[0]->grad() + *_prev[1] * grad());
-			_prev[1]->set_grad(_prev[1]->grad() + *_prev[0] * grad());
+#ifdef _DEBUG
+			traceFile << "operation *\n";
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+			traceFile << _prev[1]->label() << " prev[0] gradient: " << _prev[1]->grad() << "\n";
+			traceFile << _prev[1]->label() << " prev[0] data: " << float(*_prev[1]) << "\n";
+#endif
+
+			_prev[0]->set_grad(_prev[0]->grad() + float(*_prev[1]) * grad());
+			_prev[1]->set_grad(_prev[1]->grad() + float(*_prev[0]) * grad());
+
+#ifdef _DEBUG
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+			traceFile << _prev[1]->label() << " prev[0] gradient: " << _prev[1]->grad() << "\n";
+			traceFile << _prev[1]->label() << " prev[0] data: " << float(*_prev[1]) << "\n";
+#endif
 		}
 		else if (_op.compare("exp") == 0)
 		{
-			_prev[0]->set_grad(_prev[0]->grad() + data * grad());
+#ifdef _DEBUG
+			traceFile << "operation exp\n";
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+#endif
+
+			_prev[0]->set_grad(_prev[0]->grad() + float(data) * grad());
+
+#ifdef _DEBUG
+			traceFile << "after change\n";
+
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+#endif
 		}
 		else if (_op.compare("pow") == 0)
 		{
-			_prev[0]->set_grad(_prev[0]->grad() + *_prev[1] * std::pow(*_prev[0], *_prev[1] - 1.0f) * grad());
+#ifdef _DEBUG
+			traceFile << "operation pow\n";
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+#endif
+			_prev[0]->set_grad(_prev[0]->grad() + float(*_prev[1]) * std::pow(float(*_prev[0]), float(*_prev[1]) - 1.0f) * grad());
+
+#ifdef _DEBUG
+			traceFile << "after change\n";
+
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+#endif
 		}
 		else if (_op.compare("log") == 0)
 		{
-			_prev[0]->set_grad(_prev[0]->grad() + 1.0f / *_prev[0] * grad());
+#ifdef _DEBUG
+			traceFile << "operation log\n";
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+#endif
+			_prev[0]->set_grad(_prev[0]->grad() + 1.0f / float(*_prev[0]) * grad());
+#ifdef _DEBUG
+			traceFile << "after change\n";
+
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+#endif
 		}
 		else if (_op.compare("/") == 0)
 		{
-			_prev[0]->set_grad(_prev[0]->grad() + 1.0f / *_prev[1] * grad());
-			_prev[1]->set_grad(_prev[1]->grad() + *_prev[0] / (*_prev[1] + grad()) - *_prev[0] /  *_prev[1]);
-		}
+#ifdef _DEBUG
+			traceFile << "operation /\n";
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+			traceFile << _prev[1]->label() << " prev[0] gradient: " << _prev[1]->grad() << "\n";
+			traceFile << _prev[1]->label() << " prev[0] data: " << float(*_prev[1]) << "\n";
+#endif
 
+			_prev[0]->set_grad(_prev[0]->grad() + 1.0f / float(*_prev[1]) * grad());
+			_prev[1]->set_grad(_prev[1]->grad() + float(*_prev[0]) / (float(*_prev[1]) + grad()) - float(*_prev[0]) /  float(*_prev[1]));
+#ifdef _DEBUG		
+			traceFile << this->label() << " this gradient: " << grad() << "\n";
+			traceFile << this->label() << " this data: " << data << "\n";
+			traceFile << _prev[0]->label() << " prev[0] gradient: " << _prev[0]->grad() << "\n";
+			traceFile << _prev[0]->label() << " prev[0] data: " << float(*_prev[0]) << "\n";
+			traceFile << _prev[1]->label() << " prev[0] gradient: " << _prev[1]->grad() << "\n";
+			traceFile << _prev[1]->label() << " prev[0] data: " << float(*_prev[1]) << "\n";
+#endif
+		}
+#ifdef _DEBUG
+		traceFile << "end\n";
+#endif
 		return;
 	}
 

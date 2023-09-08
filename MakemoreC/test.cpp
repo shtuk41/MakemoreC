@@ -238,11 +238,12 @@ TEST_F(MakemoreTest, OneHot)
 	}
 }
 
-void make_input_5(std::vector<std::shared_ptr<value>>& x, int num, const std::array<float, 5> &arr)
+template <int numberOfElements>
+void make_input_x(std::vector<std::shared_ptr<value>>& x, const std::array<float, numberOfElements> &arr)
 {
 	x.clear();
 
-	for (int ii = 0; ii < num; ii++)
+	for (int ii = 0; ii < numberOfElements; ii++)
 	{
 		x.push_back(std::make_shared<value>(value(arr[ii], std::string("input") + std::to_string(ii))));
 	}
@@ -328,7 +329,7 @@ TEST_F(MakemoreTest, Network)
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
-			make_input_5(input_values[ii], 5, inputs[ii]);
+			make_input_x<5>(input_values[ii], inputs[ii]);
 			results[ii] = m(input_values[ii]);
 
 #ifdef _PRINT
@@ -484,6 +485,132 @@ TEST_F(MakemoreTest, Network)
 	}
 }
 
+TEST_F(MakemoreTest, Backpropogation1)
+{
+	std::vector<int> layersizes;
+	layersizes.push_back(2);
+
+	mlp m(2, layersizes, 1.0f);
+
+	std::vector<std::shared_ptr<value>> input_values[2];
+	std::vector<std::shared_ptr<value>> results[2];
+
+	std::array<float, 2> inputs[2];
+
+	inputs[0] = one_hot<2>(0);
+	inputs[1] = one_hot<2>(1);
+
+	std::vector<std::shared_ptr<value>> values;
+	std::vector<std::vector<std::shared_ptr<value>>> probs;
+	std::vector<std::shared_ptr<value>> likelyhoods;
+
+
+
+	for (int pass = 0; pass < 4; pass++)
+	{
+		int labelCount = 0;
+
+		for (int bigram = 0; bigram < 2; bigram++)
+		{
+			make_input_x<2>(input_values[bigram], inputs[bigram]);
+			results[bigram] = m(input_values[bigram]);
+
+			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
+			values.push_back(localSum);
+			value::all_values.push_back(localSum);
+			labelCount++;
+
+			for (auto jj : results[bigram])
+			{
+				std::cout << *jj << ',';
+				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount));
+				values.push_back(localSum);
+				value::all_values.push_back(localSum);
+				labelCount++;
+			}
+
+			std::vector<std::shared_ptr<value>> localProbs;
+
+			for (auto jj : results[bigram])
+			{
+				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount));
+				localProbs.push_back(prob);
+				value::all_values.push_back(prob);
+				labelCount++;
+
+				std::cout << *prob << ',';
+			}
+
+			probs.push_back(localProbs);
+		}
+
+		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
+		values.push_back(oneNeg);
+		value::all_values.push_back(oneNeg);
+		labelCount++;
+
+		for (int bigram = 0; bigram < 2; bigram++)
+		{
+			auto likelyhood = std::make_shared<value>(value(probs[bigram][bigram]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount));
+			labelCount++;
+			values.push_back(likelyhood);
+			value::all_values.push_back(likelyhood);
+
+			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount));
+			labelCount++;
+
+			likelyhoods.push_back(likelyhoodNeg);
+			value::all_values.push_back(likelyhoodNeg);
+		}
+
+		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount));
+		values.push_back(totalLoss);
+		value::all_values.push_back(totalLoss);
+		labelCount++;
+
+		for (int bigram = 0; bigram < 2; bigram++)
+		{
+			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[bigram])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount));
+			values.push_back(totalLoss);
+			value::all_values.push_back(totalLoss);
+			labelCount++;
+		}
+
+		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>(2, std::string("totalNumberOfLosses"));
+		value::all_values.push_back(totalNumberOfLosses);
+
+		std::shared_ptr<value> loss = std::make_shared<value>(value(*totalLoss / *totalNumberOfLosses)); loss->set_label(std::string("loss"));
+		value::all_values.push_back(loss);
+
+
+
+		loss->backward();
+
+		trace(*loss);
+		trace_split();
+
+		std::cout << "LOSS IS: " << *loss << std::endl;
+
+		auto params = m.parameters();
+
+		std::cout << "size parameters: " << params.size() << std::endl;
+
+		for (auto ii : params)
+		{
+			std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << '\n';
+
+			ii->setData(*ii - 0.1f * ii->grad());
+			ii->set_grad(0.0f);
+
+			std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << '\n';
+		}
+
+		values.clear();
+		probs.clear();
+		likelyhoods.clear();
+	}
+}
+
 TEST_F(MakemoreTest, DISABLED_Network_ALL)
 {
 	std::ofstream monitor;
@@ -491,8 +618,9 @@ TEST_F(MakemoreTest, DISABLED_Network_ALL)
 	monitor.open("monitor_network_all.csv");
 
 	ASSERT_TRUE(monitor.is_open());
-	
 
+	
+	
 	const int numberOfBigrams = 627;
 
 	std::vector<int> xs, ys;
@@ -509,8 +637,6 @@ TEST_F(MakemoreTest, DISABLED_Network_ALL)
 	layersizes.push_back(27);
 
 	mlp m(27, layersizes);
-
-	std::vector<std::shared_ptr<value>> x;
 
 	std::vector<std::shared_ptr<value>> input_values[numberOfBigrams];
 	std::vector<std::shared_ptr<value>> results[numberOfBigrams];
@@ -736,7 +862,6 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 	ASSERT_TRUE(monitor.is_open());
 
-
 	const int numberOfBigrams = 627;
 
 	std::vector<int> xs, ys;
@@ -754,12 +879,41 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 	mlp m(27, layersizes);
 
+	auto parameters = m.parameters();
+
+	std::cout << "size parameters: " << parameters.size() << std::endl;
+
+	for (auto ii : parameters)
+	{
+		monitor << ii->label() << "," << ii->label() + "_graident" << ",";
+	}
+
+	monitor << "\n";
+
+	for (auto ii : parameters)
+	{
+		//std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << '\n';
+
+		//monitor << std::to_string(*ii) << "," << std::to_string(ii->grad()) << ",";
+
+		float grad = ii->grad();
+		float value = *ii;
+		float newvalue = *ii - 50.0 * ii->grad();
+
+		ii->setData(newvalue);
+		ii->set_grad(0.0f);
+
+		monitor << std::to_string(*ii) << "," << std::to_string(grad) << ",";
+	}
+
+	monitor << "\n";
+
 	std::vector<std::shared_ptr<value>> x;
 
-	std::vector<std::shared_ptr<value>> input_values[numberOfBigrams];
-	std::vector<std::shared_ptr<value>> results[numberOfBigrams];
+	std::vector<std::shared_ptr<value>> *input_values = new std::vector<std::shared_ptr<value>>[numberOfBigrams];
+	std::vector<std::shared_ptr<value>> *results = new std::vector<std::shared_ptr<value>>[numberOfBigrams]; //this should be total number of bigrams (not unique)
 
-	std::array<float, 27> inputs[numberOfBigrams];
+	std::array<float, 27> *inputs = new std::array<float, 27>[numberOfBigrams];
 
 	int count = 0;
 
@@ -773,7 +927,7 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 	std::vector<std::shared_ptr<value>> likelyhoods;
 
 
-	for (int pass = 0; pass < 500; pass++)
+	for (int pass = 0; pass < 50; pass++)
 	{
 		int labelCount = 0;
 
@@ -798,7 +952,6 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 			value::all_values.push_back(localSum);
 			labelCount++;
 
-
 			for (auto jj : results[ii])
 			{
 #ifdef _PRINT
@@ -810,6 +963,7 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 				labelCount++;
 			}
 
+	
 #ifdef _PRINT
 			std::cout << '\n';
 
@@ -820,6 +974,8 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 			std::vector<std::shared_ptr<value>> localProbs;
 
+			float accumulatedProbabilityCheck = 0.0;
+
 			for (auto jj : results[ii])
 			{
 				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount));
@@ -827,13 +983,18 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 				value::all_values.push_back(prob);
 				labelCount++;
 
+				
+
 #ifdef _PRINT
+				accumulatedProbabilityCheck += *prob;
 				std::cout << *prob << ',';
 #endif
 			}
 
+			
 #ifdef _PRINT
 			std::cout << "]\n";
+			std::cout << "accumulated probability: " << accumulatedProbabilityCheck << std::endl;
 #endif
 
 			probs.push_back(localProbs);
@@ -913,34 +1074,16 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 		//trace(*finalLoss);
 
-		finalLoss->set_grad(1.0);
-		finalLoss->backward();
+		loss->set_grad(1.0);
+		loss->backward();
 
 		//trace(*finalLoss);
 
-		std::cout << "pass: " << pass << " , LOSS IS: " << *finalLoss << std::endl;
+		std::cout << "pass: " << pass << " , LOSS IS: " << *loss << std::endl;
 
 		//monitor << *loss << ',';
 
 		auto params = m.parameters();
-
-		std::cout << "size parameters: " << params.size() << std::endl;
-
-		static bool first = true;
-
-		if (first)
-		{
-			for (auto ii : params)
-			{
-				monitor << ii->label() << "," << ii->label() + "_graident" << ",";
-			}
-
-			monitor << "\n";
-
-			first = false;
-		}
-
-
 
 		for (auto ii : params)
 		{
@@ -950,7 +1093,7 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 			float grad = ii->grad();
 			float value = *ii;
-			float newvalue = *ii - 50.0f * ii->grad();
+			float newvalue = *ii - 50.0 * ii->grad();
 
 			ii->setData(newvalue);
 			ii->set_grad(0.0f);
