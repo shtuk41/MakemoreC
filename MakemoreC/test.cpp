@@ -877,6 +877,7 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 	int bigramCount = 0;
 
+
 	for (auto ii : mm.BigramVector())
 	{
 		xs.push_back(mm.Stoi()[ii.first.first]);
@@ -888,11 +889,7 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 	mlp m(27, layersizes);
 
-	size_t paramCount = m.saveParameters("savinginit.csv");
-	if (m.loadParameters("savinginit.csv", paramCount))
-	{
-		m.saveParameters("savinginitTest.csv");
-	}
+	//m.loadParameters("modelIteration100.csv", std::nullopt);
 
 	auto parameters = m.parameters();
 
@@ -920,7 +917,8 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 	monitor << "\n";
 
 	std::vector<std::shared_ptr<value>> *input_values = new std::vector<std::shared_ptr<value>>[numberOfBigrams];
-	std::vector<std::shared_ptr<value>> *results = new std::vector<std::shared_ptr<value>>[numberOfBigrams]; //this should be total number of bigrams (not unique)
+	std::vector<std::shared_ptr<value>> *results = new std::vector<std::shared_ptr<value>>[numberOfBigrams]; 
+	std::vector<std::shared_ptr<value>> *interResults = new std::vector<std::shared_ptr<value>>[numberOfBigrams];
 
 	std::array<double, 27> *inputs = new std::array<double, 27>[numberOfBigrams];
 
@@ -936,7 +934,7 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 	std::vector<std::shared_ptr<value>> likelyhoods;
 
 
-	for (int pass = 0; pass < 5000; pass++)
+	for (int pass = 0; pass < 100; pass++)
 	{
 		int labelCount = 0;
 
@@ -951,8 +949,24 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
+			results[ii].clear();
+
 			make_input(input_values[ii], 27, inputs[ii]);
-			results[ii] = m(input_values[ii]);
+			interResults[ii] = m(input_values[ii]);
+
+			auto numberIterations = std::make_shared<value>(mm.BigramVector()[ii].second, std::string("numberIterations") + std::to_string(labelCount++));
+			value::all_values.push_back(numberIterations);
+
+
+			for (auto ir : interResults[ii])
+			{
+#ifdef _PRINT
+				std::cout << *ir << ',';
+#endif
+				auto res = std::make_shared<value>(value(*ir * *numberIterations)); res->set_label(std::string("result") + std::to_string(labelCount++));
+				value::all_values.push_back(res);
+				results[ii].push_back(res);
+			}
 
 #ifdef _PRINT
 			std::cout << "result " << ii << std::endl;
@@ -960,6 +974,7 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
 			value::all_values.push_back(localSum);
 			labelCount++;
+
 
 			for (auto jj : results[ii])
 			{
@@ -985,12 +1000,12 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 			double accumulatedProbabilityCheck = 0.0;
 
+			std::shared_ptr<value> negOne = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
+			value::all_values.push_back(negOne);
+			labelCount++;
+
 			for (auto jj : results[ii])
 			{
-				std::shared_ptr<value> negOne = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
-				value::all_values.push_back(negOne);
-				labelCount++;
-
 				auto multiplier = std::make_shared<value>(value(localSum->pow(*negOne))); multiplier->set_label(std::string("multiplier") + std::to_string(labelCount));
 				value::all_values.push_back(multiplier);
 				labelCount++;
@@ -1016,6 +1031,11 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 			probs.push_back(localProbs);
 		}
+
+		traceProbability(std::string("probability") + std::to_string(pass) + ".csv", probs);
+
+		
+
 
 		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
 		value::all_values.push_back(oneNeg);
@@ -1049,8 +1069,10 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 		value::all_values.push_back(totalNumberOfLosses);
 		labelCount++;
 
-		totalNumberOfLosses = std::make_shared<value>(totalNumberOfLosses->pow(*oneNeg), std::string("totalNumberOfLosses"));
+		totalNumberOfLosses = std::make_shared<value>(totalNumberOfLosses->pow(*oneNeg), std::string("totalNumberOfLosses") + std::to_string(labelCount));
 		value::all_values.push_back(totalNumberOfLosses);
+		labelCount++;
+
 
 		std::shared_ptr<value> loss = std::make_shared<value>(value(*totalLoss * *totalNumberOfLosses)); loss->set_label(std::string("loss") + std::to_string(labelCount));
 		value::all_values.push_back(loss);
@@ -1112,19 +1134,19 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 		for (auto ii : params)
 		{
-			//std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << '\n';
+			//std::cout << ii->label() << ", data: " << *ii << ", grad: " << ii->grad() << ", getSetGrad: " << ii->getSetGradCount() << '\n';
 
 			//monitor << std::to_string(*ii) << "," << std::to_string(ii->grad()) << ",";
 
 			double grad = ii->grad();
 			double value = *ii;
 
-			double mult = 50;
+			double mult = 50.0;
 
 			double newvalue = *ii - mult * ii->grad();
 
 			ii->setData(newvalue);
-			ii->set_grad(0.0f);
+			ii->reset_grad();
 
 			monitor << std::to_string(*ii) << "," << std::to_string(grad) << ",";
 		}

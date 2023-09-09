@@ -283,7 +283,7 @@ public:
 		return params.size() * 2;
 	}
 
-	bool loadParameters(std::string fileName, size_t count)
+	bool loadParameters(std::string fileName, std::optional<size_t> count)
 	{
 		std::ifstream file(fileName);
 
@@ -299,9 +299,12 @@ public:
 			parameterStrings.push_back(cell);
 		}
 
-		if (parameterStrings.size() != count)
+		if (count.has_value())
 		{
-			return false;
+			if (parameterStrings.size() != count)
+			{
+				return false;
+			}
 		}
 
 		auto params = parameters();

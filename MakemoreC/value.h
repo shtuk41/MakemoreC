@@ -25,10 +25,11 @@ private:
 	std::string _op;
 	std::string _label;
 	static unsigned int numberOfOperations;
+	size_t setGradCount;
 	
 
 public:
-	value(double d, std::string _label = std::string(""), std::vector<value*> v = std::vector<value*>(), const char* _op = "") : data(d), _op(_op), _label(_label), _grad(0.0f)
+	value(double d, std::string _label = std::string(""), std::vector<value*> v = std::vector<value*>(), const char* _op = "") : data(d), _op(_op), _label(_label), _grad(0.0f), setGradCount(0)
 	{
 		_prev = v;
 	}
@@ -66,6 +67,18 @@ public:
 	void set_grad(double g)
 	{
 		_grad = g;
+		setGradCount++;
+	}
+
+	void reset_grad()
+	{
+		_grad = 0;
+		setGradCount = 0;
+	}
+
+	size_t getSetGradCount()
+	{
+		return setGradCount;
 	}
 
 	void print() const
