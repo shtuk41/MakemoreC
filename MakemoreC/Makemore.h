@@ -41,7 +41,7 @@ private:
 	std::unordered_map<std::pair<char, char>, int, BigramHashFunction> bigramMap;
 	std::vector<std::pair<std::pair<char, char>, int>> bigramVector;
 	std::vector<std::vector<int>> bigramDistribution;
-	std::unordered_map<std::pair<int,int>, float, LikelihoodHashFunction> logLiklihoodProbabilityMap;
+	std::unordered_map<std::pair<int,int>, double, LikelihoodHashFunction> logLiklihoodProbabilityMap;
 	int** n;
 	int ROWS, COLUMNS;
 
@@ -143,7 +143,7 @@ public:
 
 				for (int rr = 0; rr < COLUMNS; rr++)
 				{
-					logLiklihoodProbabilityMap[std::pair<int, int>(ii, rr)] = (float)rowDistributionList[rr] / float(sum);
+					logLiklihoodProbabilityMap[std::pair<int, int>(ii, rr)] = (double)rowDistributionList[rr] / double(sum);
 				}
 				
 			}
@@ -212,7 +212,7 @@ public:
 
 	}
 
-	float Probability(int row, int col)
+	double Probability(int row, int col)
 	{
 		return logLiklihoodProbabilityMap[std::pair<int, int>(row, col)];
 	}

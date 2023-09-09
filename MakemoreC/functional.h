@@ -3,9 +3,9 @@
 #include <array>
 
 template <std::size_t numberOfClasses>
-std::array<float, numberOfClasses> one_hot(int num)
+std::array<double, numberOfClasses> one_hot(int num)
 {
-	std::array<float, numberOfClasses> hot;
+	std::array<double, numberOfClasses> hot;
 
 	for (auto it = hot.begin(); it != hot.end(); ++it)
 	{
@@ -18,15 +18,15 @@ std::array<float, numberOfClasses> one_hot(int num)
 }
 
 template <std::size_t numberOfInputs, std::size_t numberOfClasses>
-std::array<std::array<float, numberOfClasses>, numberOfInputs> one_hot(const std::array<int, numberOfInputs> & input)
+std::array<std::array<double, numberOfClasses>, numberOfInputs> one_hot(const std::array<int, numberOfInputs> & input)
 {
-	std::array<std::array<float, numberOfClasses>, numberOfInputs> hotOuput;
+	std::array<std::array<double, numberOfClasses>, numberOfInputs> hotOuput;
 
 	int count = 0;
 
 	for (auto ii : input)
 	{
-		std::array<float, numberOfClasses> hot;
+		std::array<double, numberOfClasses> hot;
 
 		for (auto it = hot.begin(); it != hot.end(); ++it)
 		{

@@ -6,6 +6,7 @@
 #include <memory>
 #include <value.h>
 #include <optional>
+#include <fstream>
 
 
 class neuron
@@ -22,7 +23,7 @@ private:
 	std::string neuron_name;
 
 public:
-	neuron(int nin, std::optional<float> defaultWeight) :numberOfInputs(nin)//, out(std::make_shared<value>(-9999999.9f, "invalid"))
+	neuron(int nin, std::optional<double> defaultWeight) :numberOfInputs(nin)//, out(std::make_shared<value>(-9999999.9f, "invalid"))
 	{
 		neuron_name = std::string("_neu_") + std::to_string(name);
 		name++;
@@ -43,17 +44,17 @@ public:
 
 			for (int ii = 0; ii < nin; ii++)
 			{
-				auto i = std::make_shared<value>((float)dis(gen), std::string("weight") + std::to_string(ii) + neuron_name);
+				auto i = std::make_shared<value>((double)dis(gen), std::string("weight") + std::to_string(ii) + neuron_name);
 				weights.push_back(i);
 			}
 		}
 	}
 
-	neuron(std::initializer_list<float> weightvals)
+	neuron(std::initializer_list<double> weightvals)
 	{
 		int count = 0;
 
-		for (float val : weightvals)
+		for (double val : weightvals)
 		{
 			weights.push_back(std::make_shared<value>(val, std::string("weight" + std::to_string(count) + neuron_name)));
 			count++;
@@ -153,7 +154,7 @@ private:
 
 
 public:
-	layer(int nin, int nout, std::optional<float> defaultWeight) : numberOfInputs(nin), numberOfOutputs(nout)
+	layer(int nin, int nout, std::optional<double> defaultWeight) : numberOfInputs(nin), numberOfOutputs(nout)
 	{
 		for (int ii = 0; ii < nout; ii++)
 		{
@@ -213,7 +214,7 @@ private:
 	std::vector<std::vector<std::shared_ptr<value>>> results;
 
 public:
-	mlp(int nin, std::vector<int> nouts, std::optional<float> defaultWeight = std::nullopt)
+	mlp(int nin, std::vector<int> nouts, std::optional<double> defaultWeight = std::nullopt)
 	{
 		std::vector<int> sz;
 		sz.push_back(nin);
@@ -265,6 +266,56 @@ public:
 		}
 
 		results.clear();
+	}
+
+	size_t saveParameters(std::string fileName)
+	{
+		std::ofstream file(fileName);
+		auto params = parameters();
+
+		for (auto p : params)
+		{
+			file << std::to_string(*p) << "," << std::to_string(p->grad()) << ",";
+		}
+
+		file.close();
+
+		return params.size() * 2;
+	}
+
+	bool loadParameters(std::string fileName, size_t count)
+	{
+		std::ifstream file(fileName);
+
+		std::string line;
+		std::getline(file, line);
+
+		std::vector<std::string> parameterStrings;
+		std::string cell;
+
+		std::stringstream lineStream(line);
+		while (std::getline(lineStream, cell, ','))
+		{
+			parameterStrings.push_back(cell);
+		}
+
+		if (parameterStrings.size() != count)
+		{
+			return false;
+		}
+
+		auto params = parameters();
+
+		auto iterator = parameterStrings.begin();
+
+		for (auto &p : params)
+		{
+			double v = std::stod(*iterator++);
+			double g = std::stod(*iterator++);
+
+			p->setData(v);
+			p->set_grad(g);
+		}
 	}
 };
 
