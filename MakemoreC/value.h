@@ -26,10 +26,11 @@ private:
 	std::string _label;
 	static unsigned int numberOfOperations;
 	size_t setGradCount;
+	bool backropRan;
 	
 
 public:
-	value(double d, std::string _label = std::string(""), std::vector<value*> v = std::vector<value*>(), const char* _op = "") : data(d), _op(_op), _label(_label), _grad(0.0f), setGradCount(0)
+	value(double d, std::string _label = std::string(""), std::vector<value*> v = std::vector<value*>(), const char* _op = "") : data(d), _op(_op), _label(_label), _grad(0.0f), setGradCount(0), backropRan(false)
 	{
 		_prev = v;
 	}
@@ -74,6 +75,11 @@ public:
 	{
 		_grad = 0;
 		setGradCount = 0;
+	}
+
+	void reset_backrop_ran()
+	{
+		backropRan = false;
 	}
 
 	size_t getSetGradCount()
@@ -244,6 +250,10 @@ public:
 		traceFile << "starting " <<  this->label()  << "\n";
 #endif
 
+		if (backropRan)
+			return;
+
+		backropRan = true;
 
 
 		if (_op.compare("tanh") == 0)
@@ -432,6 +442,7 @@ public:
 	}
 
 	std::vector<value*> topo;
+	std::vector<value*> topo2;
 	std::vector<value*> visited;
 
 	void build_topo(value* v)
@@ -461,40 +472,73 @@ public:
 
 	void backward()
 	{
-		//auto start = std::chrono::high_resolution_clock::now();
+		auto start = std::chrono::high_resolution_clock::now();
 
-		//topo.clear();
-		//visited.clear();
+		topo.clear();
+		visited.clear();
 
 		_grad = 1.0f;
 
-		//build_topo(this);
-		//auto stop = std::chrono::high_resolution_clock::now();
-		//auto topoduration = duration_cast<std::chrono::seconds>(stop - start);
-		//std::cout << "Topo discovery took: " << topoduration.count() << " seconds. " << std::endl;
+		build_topo(this);
+		auto stop = std::chrono::high_resolution_clock::now();
+		auto topoduration = duration_cast<std::chrono::seconds>(stop - start);
+		std::cout << "Topo discovery took: " << topoduration.count() << " seconds. " << std::endl;
 
-		//std::cout << "TOPO SIZE: " << topo.size() << std::endl;
-		
+		std::cout << "TOPO SIZE: " << topo.size() << std::endl;
+
+		start = std::chrono::high_resolution_clock::now();
+
+		for (auto it = topo.rbegin(); it != topo.rend(); ++it)
+		{
+			(*it)->calc_backward();
+		}
+
+		stop = std::chrono::high_resolution_clock::now();
+
+		auto calcduration = duration_cast<std::chrono::microseconds>(stop - start);
+
+		std::cout << "Calc backward took: " << calcduration.count() << " microseconds. " << std::endl;
+	}
+
+	void build_topo_2(value* v)
+	{
+		for (auto ii : v->prev())
+		{
+			build_topo_2(ii);
+		}
+
+		topo2.push_back(v);
+	}
+
+	void backward2()
+	{
 		auto start = std::chrono::high_resolution_clock::now();
 
-		//for (auto it = topo.rbegin(); it != topo.rend(); ++it)
-		//{
-		//	(*it)->calc_backward();
-		//}
+		topo.clear();
+		visited.clear();
 
-		for (auto it = value::all_values.rbegin() ; it != value::all_values.rend(); ++it)
-		{
-			//std::cout << "backwards: " << (*it)->label() << "\n";
-			(*it)->calc_backward();
-		}
+		_grad = 1.0f;
 
-		for (auto it = value::all_weights.rbegin(); it != value::all_weights.rend(); ++it)
-		{
-			//std::cout << "backwards weights: " << (*it)->label() << "\n";
-			(*it)->calc_backward();
-		}
-
+		build_topo_2(this);
 		auto stop = std::chrono::high_resolution_clock::now();
+		auto topoduration = duration_cast<std::chrono::seconds>(stop - start);
+		std::cout << "Topo discovery took: " << topoduration.count() << " seconds. " << std::endl;
+
+		std::cout << "TOPO SIZE: " << topo2.size() << std::endl;
+		
+		start = std::chrono::high_resolution_clock::now();
+
+		for (auto it = topo2.rbegin(); it != topo2.rend(); ++it)
+		{
+			(*it)->calc_backward();
+		}
+
+		for (auto it = topo2.rbegin(); it != topo2.rend(); ++it)
+		{
+			(*it)->reset_backrop_ran();
+		}
+
+		stop = std::chrono::high_resolution_clock::now();
 
 		auto calcduration = duration_cast<std::chrono::microseconds>(stop - start);
 

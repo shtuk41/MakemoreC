@@ -259,7 +259,7 @@ void make_input(std::vector<std::shared_ptr<value>>& x, int num, const std::arra
 	}
 }
 
-TEST_F(MakemoreTest, DISABLED_Network)
+TEST_F(MakemoreTest, Network)
 {
 	std::ofstream monitor("monitor_network.csv");
 
@@ -620,7 +620,7 @@ TEST_F(MakemoreTest, Backpropogation1)
 	}
 }
 
-TEST_F(MakemoreTest, DISABLED_Network_ALL)
+TEST_F(MakemoreTest, Network_ALL)
 {
 	std::ofstream monitor;
 
@@ -871,7 +871,7 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 	ASSERT_TRUE(monitor.is_open());
 
-	const int numberOfBigrams = 627;
+	const int numberOfBigrams = 228146;
 
 	std::vector<int> xs, ys;
 
@@ -880,8 +880,11 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 	for (auto ii : mm.BigramVector())
 	{
-		xs.push_back(mm.Stoi()[ii.first.first]);
-		ys.push_back(mm.Stoi()[ii.first.second]);
+		for (int jj = 0; jj < ii.second; jj++)
+		{
+			xs.push_back(mm.Stoi()[ii.first.first]);
+			ys.push_back(mm.Stoi()[ii.first.second]);
+		}
 	}
 
 	std::vector<int> layersizes;
@@ -918,7 +921,6 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 	std::vector<std::shared_ptr<value>> *input_values = new std::vector<std::shared_ptr<value>>[numberOfBigrams];
 	std::vector<std::shared_ptr<value>> *results = new std::vector<std::shared_ptr<value>>[numberOfBigrams]; 
-	std::vector<std::shared_ptr<value>> *interResults = new std::vector<std::shared_ptr<value>>[numberOfBigrams];
 
 	std::array<double, 27> *inputs = new std::array<double, 27>[numberOfBigrams];
 
@@ -952,21 +954,8 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 			results[ii].clear();
 
 			make_input(input_values[ii], 27, inputs[ii]);
-			interResults[ii] = m(input_values[ii]);
+			results[ii] = m(input_values[ii]);
 
-			auto numberIterations = std::make_shared<value>(mm.BigramVector()[ii].second, std::string("numberIterations") + std::to_string(labelCount++));
-			value::all_values.push_back(numberIterations);
-
-
-			for (auto ir : interResults[ii])
-			{
-#ifdef _PRINT
-				std::cout << *ir << ',';
-#endif
-				auto res = std::make_shared<value>(value(*ir * *numberIterations)); res->set_label(std::string("result") + std::to_string(labelCount++));
-				value::all_values.push_back(res);
-				results[ii].push_back(res);
-			}
 
 #ifdef _PRINT
 			std::cout << "result " << ii << std::endl;
@@ -1033,9 +1022,6 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 		}
 
 		traceProbability(std::string("probability") + std::to_string(pass) + ".csv", probs);
-
-		
-
 
 		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
 		value::all_values.push_back(oneNeg);
@@ -1121,8 +1107,8 @@ TEST_F(MakemoreTest, EXP_Network_ALL)
 
 		//trace(*finalLoss);
 
-		finalLoss->set_grad(1.0);
-		finalLoss->backward();
+		loss->set_grad(1.0);
+		loss->backward2();
 
 		//trace(*finalLoss);
 
