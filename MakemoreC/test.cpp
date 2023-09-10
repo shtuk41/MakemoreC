@@ -521,18 +521,16 @@ TEST_F(MakemoreTest, Backpropogation1)
 			make_input_x<2>(input_values[bigram], inputs[bigram]);
 			results[bigram] = m(input_values[bigram]);
 
-			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
+			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount++));
 			values.push_back(localSum);
 			value::all_values.push_back(localSum);
-			labelCount++;
 
 			for (auto jj : results[bigram])
 			{
 				std::cout << *jj << ',';
-				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount));
+				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount++));
 				values.push_back(localSum);
 				value::all_values.push_back(localSum);
-				labelCount++;
 			}
 
 			std::cout << '\n';
@@ -541,10 +539,9 @@ TEST_F(MakemoreTest, Backpropogation1)
 
 			for (auto jj : results[bigram])
 			{
-				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount));
+				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount++));
 				localProbs.push_back(prob);
 				value::all_values.push_back(prob);
-				labelCount++;
 
 				std::cout << *prob << ',';
 			}
@@ -553,36 +550,31 @@ TEST_F(MakemoreTest, Backpropogation1)
 			probs.push_back(localProbs);
 		}
 
-		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
+		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount++));
 		values.push_back(oneNeg);
 		value::all_values.push_back(oneNeg);
-		labelCount++;
 
 		for (int bigram = 0; bigram < 2; bigram++)
 		{
-			auto likelyhood = std::make_shared<value>(value(probs[bigram][bigram]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount));
-			labelCount++;
+			auto likelyhood = std::make_shared<value>(value(probs[bigram][bigram]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount++));
 			values.push_back(likelyhood);
 			value::all_values.push_back(likelyhood);
 
-			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount));
-			labelCount++;
+			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount++));
 
 			likelyhoods.push_back(likelyhoodNeg);
 			value::all_values.push_back(likelyhoodNeg);
 		}
 
-		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount));
+		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount++));
 		values.push_back(totalLoss);
 		value::all_values.push_back(totalLoss);
-		labelCount++;
 
 		for (int bigram = 0; bigram < 2; bigram++)
 		{
-			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[bigram])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount));
+			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[bigram])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount++));
 			values.push_back(totalLoss);
 			value::all_values.push_back(totalLoss);
-			labelCount++;
 		}
 
 		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>(2, std::string("totalNumberOfLosses"));
@@ -685,10 +677,8 @@ TEST_F(MakemoreTest, DISABLED_Network_ALL)
 #ifdef _PRINT
 			std::cout << "result " << ii << std::endl;
 #endif
-			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
+			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount++));
 			value::all_values.push_back(localSum);
-			labelCount++;
-
 
 			for (auto jj : results[ii])
 			{
@@ -696,9 +686,8 @@ TEST_F(MakemoreTest, DISABLED_Network_ALL)
 				std::cout << *jj << ',';
 #endif
 
-				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount));
+				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount++));
 				value::all_values.push_back(localSum);
-				labelCount++;
 			}
 
 #ifdef _PRINT
@@ -713,10 +702,9 @@ TEST_F(MakemoreTest, DISABLED_Network_ALL)
 
 			for (auto jj : results[ii])
 			{
-				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount));
+				auto prob = std::make_shared<value>(value(*jj / *localSum)); prob->set_label(std::string("localProb") + std::to_string(labelCount++));
 				localProbs.push_back(prob);
 				value::all_values.push_back(prob);
-				labelCount++;
 
 #ifdef _PRINT
 				std::cout << *prob << ',';
@@ -730,32 +718,27 @@ TEST_F(MakemoreTest, DISABLED_Network_ALL)
 			probs.push_back(localProbs);
 		}
 
-		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
+		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount++));
 		value::all_values.push_back(oneNeg);
-		labelCount++;
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
-			auto likelyhood = std::make_shared<value>(value(probs[ii][ys[ii]]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount));
-			labelCount++;
+			auto likelyhood = std::make_shared<value>(value(probs[ii][ys[ii]]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount++));
 			value::all_values.push_back(likelyhood);
 
-			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount));
-			labelCount++;
+			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount++));
 			value::all_values.push_back(likelyhoodNeg);
 
 			likelyhoods.push_back(likelyhoodNeg);
 		}
 
-		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount));
+		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount++));
 		value::all_values.push_back(totalLoss);
-		labelCount++;
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
-			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[ii])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount));
+			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[ii])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount++));
 			value::all_values.push_back(totalLoss);
-			labelCount++;
 		}
 
 		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>((double)numberOfBigrams, std::string("totalNumberOfLosses"));
@@ -960,10 +943,8 @@ TEST_F(MakemoreTest, DISABLED_EXP_Network_ALL)
 #ifdef _PRINT
 			std::cout << "result " << ii << std::endl;
 #endif
-			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount));
+			std::shared_ptr<value> localSum = std::make_shared<value>(0.0f, std::string("localSum") + std::to_string(labelCount++));
 			value::all_values.push_back(localSum);
-			labelCount++;
-
 
 			for (auto jj : results[ii])
 			{
@@ -971,9 +952,8 @@ TEST_F(MakemoreTest, DISABLED_EXP_Network_ALL)
 				std::cout << *jj << ',';
 #endif
 
-				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount));
+				localSum = std::make_shared<value>(value(*localSum + *jj)); localSum->set_label(std::string("localSum") + std::to_string(labelCount++));
 				value::all_values.push_back(localSum);
-				labelCount++;
 			}
 
 	
@@ -989,22 +969,17 @@ TEST_F(MakemoreTest, DISABLED_EXP_Network_ALL)
 
 			double accumulatedProbabilityCheck = 0.0;
 
-			std::shared_ptr<value> negOne = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
+			std::shared_ptr<value> negOne = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount++));
 			value::all_values.push_back(negOne);
-			labelCount++;
 
 			for (auto jj : results[ii])
 			{
-				auto multiplier = std::make_shared<value>(value(localSum->pow(*negOne))); multiplier->set_label(std::string("multiplier") + std::to_string(labelCount));
+				auto multiplier = std::make_shared<value>(value(localSum->pow(*negOne))); multiplier->set_label(std::string("multiplier") + std::to_string(labelCount++));
 				value::all_values.push_back(multiplier);
-				labelCount++;
 
-				auto prob = std::make_shared<value>(value(*jj * *multiplier)); prob->set_label(std::string("localProb") + std::to_string(labelCount));
+				auto prob = std::make_shared<value>(value(*jj * *multiplier)); prob->set_label(std::string("localProb") + std::to_string(labelCount++));
 				localProbs.push_back(prob);
 				value::all_values.push_back(prob);
-				labelCount++;
-
-				
 
 #ifdef _PRINT
 				accumulatedProbabilityCheck += *prob;
@@ -1023,87 +998,70 @@ TEST_F(MakemoreTest, DISABLED_EXP_Network_ALL)
 
 		traceProbability(std::string("probability") + std::to_string(pass) + ".csv", probs);
 
-		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount));
+		std::shared_ptr<value> oneNeg = std::make_shared<value>(-1.0f, std::string("negone") + std::to_string(labelCount++));
 		value::all_values.push_back(oneNeg);
-		labelCount++;
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
-			auto likelyhood = std::make_shared<value>(value(probs[ii][ys[ii]]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount));
-			labelCount++;
+			auto likelyhood = std::make_shared<value>(value(probs[ii][ys[ii]]->log())); likelyhood->set_label(std::string("likelyhood") + std::to_string(labelCount++));
 			value::all_values.push_back(likelyhood);
 
-			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount));
-			labelCount++;
+			auto likelyhoodNeg = std::make_shared<value>(value(*oneNeg * (*likelyhood))); likelyhoodNeg->set_label(std::string("likelyhoodNeg") + std::to_string(labelCount++));
 			value::all_values.push_back(likelyhoodNeg);
 
 			likelyhoods.push_back(likelyhoodNeg);
 		}
 
-		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount));
+		std::shared_ptr<value> totalLoss = std::make_shared<value>(0.0f, std::string("totalLoss") + std::to_string(labelCount++));
 		value::all_values.push_back(totalLoss);
-		labelCount++;
 
 		for (int ii = 0; ii < numberOfBigrams; ii++)
 		{
-			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[ii])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount));
+			totalLoss = std::make_shared<value>(value(*totalLoss + *likelyhoods[ii])); totalLoss->set_label(std::string("totalLoss") + std::to_string(labelCount++));
 			value::all_values.push_back(totalLoss);
-			labelCount++;
 		}
 
-		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>((double)numberOfBigrams, std::string("totalNumberOfLosses") + std::to_string(labelCount));
+		std::shared_ptr<value> totalNumberOfLosses = std::make_shared<value>((double)numberOfBigrams, std::string("totalNumberOfLosses") + std::to_string(labelCount++));
 		value::all_values.push_back(totalNumberOfLosses);
-		labelCount++;
 
-		totalNumberOfLosses = std::make_shared<value>(totalNumberOfLosses->pow(*oneNeg), std::string("totalNumberOfLosses") + std::to_string(labelCount));
+		totalNumberOfLosses = std::make_shared<value>(totalNumberOfLosses->pow(*oneNeg), std::string("totalNumberOfLosses") + std::to_string(labelCount++));
 		value::all_values.push_back(totalNumberOfLosses);
-		labelCount++;
 
-
-		std::shared_ptr<value> loss = std::make_shared<value>(value(*totalLoss * *totalNumberOfLosses)); loss->set_label(std::string("loss") + std::to_string(labelCount));
+		std::shared_ptr<value> loss = std::make_shared<value>(value(*totalLoss * *totalNumberOfLosses)); loss->set_label(std::string("loss") + std::to_string(labelCount++));
 		value::all_values.push_back(loss);
-		labelCount++;
 
 		auto parameters = m.parameters();
 
-		std::shared_ptr<value> totalWeight = std::make_shared<value>(0.0f, std::string("totalWeight") + std::to_string(labelCount));
+		std::shared_ptr<value> totalWeight = std::make_shared<value>(0.0f, std::string("totalWeight") + std::to_string(labelCount++));
 		value::all_values.push_back(totalWeight);
 
 		for (auto p : parameters)
 		{
-			totalWeight = std::make_shared<value>(value(*totalWeight + *p)); totalWeight->set_label(std::string("totalWeight") + std::to_string(labelCount));
+			totalWeight = std::make_shared<value>(value(*totalWeight + *p)); totalWeight->set_label(std::string("totalWeight") + std::to_string(labelCount++));
 			value::all_values.push_back(p);
 			value::all_values.push_back(totalWeight);
-			labelCount++;
 		}
 
-		totalWeight = std::make_shared<value>(value(*totalWeight * *totalWeight)); totalWeight->set_label(std::string("totalWeight") + std::to_string(labelCount));
+		totalWeight = std::make_shared<value>(value(*totalWeight * *totalWeight)); totalWeight->set_label(std::string("totalWeight") + std::to_string(labelCount++));
 		value::all_values.push_back(totalWeight);
-		labelCount++;
 
-		std::shared_ptr<value> numberOfWeights = std::make_shared<value>((double)parameters.size(), std::string("numberOfWeights") + std::to_string(labelCount));
+		std::shared_ptr<value> numberOfWeights = std::make_shared<value>((double)parameters.size(), std::string("numberOfWeights") + std::to_string(labelCount++));
 		value::all_values.push_back(numberOfWeights);
-		labelCount++;
 
-		numberOfWeights = std::make_shared<value>(numberOfWeights->pow(*oneNeg), std::string("numberOfWeights") + std::to_string(labelCount));
+		numberOfWeights = std::make_shared<value>(numberOfWeights->pow(*oneNeg), std::string("numberOfWeights") + std::to_string(labelCount++));
 		value::all_values.push_back(numberOfWeights);
-		labelCount++;
 
-		totalWeight = std::make_shared<value>(value(*totalWeight * *numberOfWeights)); totalWeight->set_label(std::string("totalWeight") + std::to_string(labelCount));
+		totalWeight = std::make_shared<value>(value(*totalWeight * *numberOfWeights)); totalWeight->set_label(std::string("totalWeight") + std::to_string(labelCount++));
 		value::all_values.push_back(totalWeight);
-		labelCount++;
-
-		auto totalWeightScaler = std::make_shared<value>(value(0.01)); totalWeightScaler->set_label(std::string("totalWeightScaler") + std::to_string(labelCount));
+	
+		auto totalWeightScaler = std::make_shared<value>(value(0.01)); totalWeightScaler->set_label(std::string("totalWeightScaler") + std::to_string(labelCount++));
 		value::all_values.push_back(totalWeightScaler);
-		labelCount++;
-
-		totalWeight = std::make_shared<value>(value(*totalWeight * *totalWeightScaler)); totalWeight->set_label(std::string("totalWeight") + std::to_string(labelCount));
+	
+		totalWeight = std::make_shared<value>(value(*totalWeight * *totalWeightScaler)); totalWeight->set_label(std::string("totalWeight") + std::to_string(labelCount++));
 		value::all_values.push_back(totalWeight);
-		labelCount++;
 
 		std::shared_ptr<value> finalLoss = std::make_shared<value>(value(*loss + *totalWeight)); loss->set_label(std::string("finalLoss"));
 		value::all_values.push_back(finalLoss);
-		labelCount++;
 
 		//trace(*finalLoss);
 
