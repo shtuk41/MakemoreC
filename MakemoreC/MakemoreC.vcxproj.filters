@@ -11,11 +11,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="makemorec.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Makemore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="neuron.h">
       <Filter>Header Files</Filter>
     </ClInclude>

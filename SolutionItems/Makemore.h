@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <map>
 #include <optional>
 #include <random>
 #include <ranges>
@@ -49,8 +50,6 @@ public:
 	void Init(std::string fileNames, std::optional<int> wordToReads)
 	{
 		std::ifstream namesFile(fileNames);
-
-		
 
 		if (namesFile.is_open())
 		{

@@ -863,7 +863,7 @@ TEST_F(MakemoreTest, DISABLED_Network_ALL)
 	}
 }
 
-TEST_F(MakemoreTest, EXP_Network_ALL)
+TEST_F(MakemoreTest, DISABLED_EXP_Network_ALL)
 {
 	std::ofstream monitor;
 
