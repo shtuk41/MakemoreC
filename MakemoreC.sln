@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MakemoreC", "MakemoreC\MakemoreC.vcxproj", "{B92945CC-79A6-468E-A620-E70D35A7BE18}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MakemoreLibTorch", "MakemoreLibTorch\MakemoreLibTorch.vcxproj", "{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{B92945CC-79A6-468E-A620-E70D35A7BE18}.Release|x64.Build.0 = Release|x64
 		{B92945CC-79A6-468E-A620-E70D35A7BE18}.Release|x86.ActiveCfg = Release|Win32
 		{B92945CC-79A6-468E-A620-E70D35A7BE18}.Release|x86.Build.0 = Release|Win32
+		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Debug|x64.ActiveCfg = Debug|x64
+		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Debug|x64.Build.0 = Debug|x64
+		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Debug|x86.ActiveCfg = Debug|x64
+		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Debug|x86.Build.0 = Debug|x64
+		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Release|x64.ActiveCfg = Release|x64
+		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Release|x64.Build.0 = Release|x64
+		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Release|x86.ActiveCfg = Release|x64
+		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
