@@ -29,9 +29,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="names.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="Header Files">
       <UniqueIdentifier>{c489c98e-8e3b-43c6-aeb4-46d77f4e54f8}</UniqueIdentifier>
     </Filter>
