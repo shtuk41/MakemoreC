@@ -34,28 +34,55 @@ int main()
 		}
 
 		//
-		torch::manual_seed(2147483647);
+		//torch::manual_seed(2147483647);
+		auto g = torch::Generator();
 		auto W = torch::randn({ 27, 27 }, torch::kFloat32);
 		W.set_requires_grad(true);
-		// ...
-		W.set_requires_grad(true);
-		auto logits = torch::mm(xenc, W);
-		auto counts = logits.exp();
-		auto probs = counts / counts.sum(1, true);
 
-		auto loss = -probs.index({torch::arange((int)xs.size(), torch::kInt64), yst}).log().mean();
+		for (int step = 0; step < 280; step++)
+		{
+			std::cout << "step number: " << step << std::endl;
+			auto logits = torch::mm(xenc, W);
+			auto counts = logits.exp();
+			auto probs = counts / counts.sum(1, true);
+
+			auto loss = -probs.index({ torch::arange((int)xs.size(), torch::kInt64), yst }).log().mean() + 0.01 * torch::mm(W,W).mean();
+
+			std::cout << "Loss is " << loss << std::endl;
 
 
-		
+			loss.backward();
 
-		loss.backward();
+			W.set_data(W.data()  - 50.0 * W.grad());
 
-		std::cout << W.grad() << std::endl;
+			W.grad().zero_();
+		}
 
-		W.grad().zero_();
+		for (int nw = 0; nw < 100; nw++)
+		{
+			int ix = 0;
+			torch::Tensor sel = torch::zeros({ 1, 27 }, torch::kFloat32);
+			sel[0][ix] = 1.0;
 
-		std::cout << W.grad() << std::endl;
-	
+			std::string name = "";
+
+			while (true)
+			{
+				auto logits = torch::mm(sel, W);
+				auto counts = logits.exp();
+				auto probs = counts / counts.sum(1, true);
+				auto ix = torch::multinomial(probs, 1, true).item<int>();
+				name += (mm.Itos(ix));
+
+				if (ix == 0)
+					break;
+			}
+
+			std::cout << name << std::endl;
+
+
+
+		}
 	}
 	catch (std::exception& e)
 	{
