@@ -13,8 +13,6 @@ int main()
 	{
 		xs.push_back(mm.Stoi()[ii.first.first]);
 		ys.push_back(mm.Stoi()[ii.first.second]);
-		//std::cout << ii.first.first << "," << ii.first.second << "\n";
-		//std::cout << xs.back() << "\n";
 	}
 
 	try
@@ -27,6 +25,7 @@ int main()
 			yst[i] = ys[i];
 		}
 
+		//create one hot arrays
 		for (int i = 0; i < xs.size(); i++) 
 		{
 			int index = xs[i];
@@ -36,10 +35,12 @@ int main()
 		//
 		//torch::manual_seed(2147483647);
 		auto g = torch::Generator();
+
+		//randn creates random with 0 mean and variance 1
 		auto W = torch::randn({ 27, 27 }, torch::kFloat32);
 		W.set_requires_grad(true);
 
-		for (int step = 0; step < 280; step++)
+		for (int step = 0; step < 1500; step++)
 		{
 			std::cout << "step number: " << step << std::endl;
 			auto logits = torch::mm(xenc, W);
@@ -50,12 +51,16 @@ int main()
 
 			std::cout << "Loss is " << loss << std::endl;
 
+			if (loss.item<double>() < 1.5)
+				break;
 
 			loss.backward();
 
 			W.set_data(W.data()  - 50.0 * W.grad());
 
 			W.grad().zero_();
+
+			
 		}
 
 		for (int nw = 0; nw < 100; nw++)
@@ -64,7 +69,7 @@ int main()
 			torch::Tensor sel = torch::zeros({ 1, 27 }, torch::kFloat32);
 			sel[0][ix] = 1.0;
 
-			std::string name = "";
+			std::string name = ".";
 
 			while (true)
 			{
@@ -79,16 +84,10 @@ int main()
 			}
 
 			std::cout << name << std::endl;
-
-
-
 		}
 	}
 	catch (std::exception& e)
 	{
 		std::cout << e.what() << std::endl;
 	}
-
-	
-
 }
