@@ -39,6 +39,7 @@ private:
 	std::vector<std::string> names;
 	std::list<char> characters;
 	std::map<char, int> stoi;
+	std::map<int, char> itos;
 	std::unordered_map<std::pair<char, char>, int, BigramHashFunction> bigramMap;
 	std::vector<std::pair<std::pair<char, char>, int>> bigramVector;
 	std::vector<std::vector<int>> bigramDistribution;
@@ -47,6 +48,18 @@ private:
 	int ROWS, COLUMNS;
 
 public:
+
+	std::vector<std::string>& Names() { return names; }
+	std::vector<std::string>& OriginalNames() { return originalNames; }
+	std::list<char>& Characters() { return characters; }
+	std::map<char, int>& Stoi() { return stoi; }
+	std::map<int, char>& Itos() { return itos; }
+	std::unordered_map<std::pair<char, char>, int, BigramHashFunction>& BigramMap() { return bigramMap; };
+	std::vector<std::pair<std::pair<char, char>, int>>& BigramVector() { return bigramVector; };
+
+	int** N() { return n; }
+
+
 	void Init(std::string fileNames, std::optional<int> wordToReads)
 	{
 		std::ifstream namesFile(fileNames);
@@ -56,7 +69,7 @@ public:
 			std::string name;
 			std::string single;
 
-			int countWorls = 0;
+			int countWords = 0;
 
 			while (std::getline(namesFile, name))
 			{
@@ -64,9 +77,9 @@ public:
 				names.push_back(std::string(".") + name + ".");
 				single += name;
 				
-				countWorls++;
+				countWords++;
 
-				if (countWorls >= wordToReads.value_or(1000000))
+				if (countWords >= wordToReads.value_or(1000000))
 					break;
 			}
 
@@ -81,11 +94,15 @@ public:
 			characters.sort();
 
 			int count = 0;
+			itos.insert(std::pair<int, char>(count, '.'));
 			stoi.insert(std::pair<char, int>('.', count++));
+			
 
 			for (auto c : characters)
 			{
 				stoi.insert(std::pair<char, int>(c, count));
+				itos.insert(std::pair<int, char>(count, c));
+
 				count++;
 			}
 
@@ -215,13 +232,4 @@ public:
 	{
 		return logLiklihoodProbabilityMap[std::pair<int, int>(row, col)];
 	}
-
-	std::vector<std::string>& Names() { return names; }
-	std::vector<std::string>& OriginalNames() { return originalNames; }
-	std::list<char>& Characters() { return characters; }
-	std::map<char, int>& Stoi() { return stoi; }
-	std::unordered_map<std::pair<char, char>, int, BigramHashFunction>& BigramMap() { return bigramMap; };
-	std::vector<std::pair<std::pair<char, char>, int>>& BigramVector() { return bigramVector; };
-
-	int** N() { return n; }
 };

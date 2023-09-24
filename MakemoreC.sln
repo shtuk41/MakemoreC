@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		SolutionItems\names.txt = SolutionItems\names.txt
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NeuralProbLM", "NeuralProbabilisticLangeModel\NeuralProbLM.vcxproj", "{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,6 +39,14 @@ Global
 		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Release|x64.Build.0 = Release|x64
 		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Release|x86.ActiveCfg = Release|x64
 		{2297BE19-6AEE-4309-B7F2-3ACD2D072F8C}.Release|x86.Build.0 = Release|x64
+		{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}.Debug|x64.ActiveCfg = Debug|x64
+		{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}.Debug|x64.Build.0 = Debug|x64
+		{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}.Debug|x86.ActiveCfg = Debug|x64
+		{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}.Debug|x86.Build.0 = Debug|x64
+		{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}.Release|x64.ActiveCfg = Release|x64
+		{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}.Release|x64.Build.0 = Release|x64
+		{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}.Release|x86.ActiveCfg = Release|x64
+		{4679DB97-53ED-413E-BCF7-BB69A4F26A9D}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
