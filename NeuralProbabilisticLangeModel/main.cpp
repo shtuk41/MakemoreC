@@ -41,7 +41,7 @@ int main()
 	}
 
 	torch::Tensor X = torch::zeros({ static_cast<long>(context_vector.size()), blockSize }, torch::kFloat32);
-	torch::Tensor Y = torch::zeros({ static_cast<long>(label_vector.size()), 1 }, torch::kInt64);
+	torch::Tensor Y = torch::zeros({ static_cast<long>(label_vector.size())}, torch::kInt64);
 
 	int rowCount = 0;
 	for (auto lv : label_vector)
@@ -64,43 +64,80 @@ int main()
 		rowCount++;
 	}
 
-	torch::Tensor C = torch::randn({27, 2}, torch::kFloat32);
-	//std::cout << C << std::endl;
-	torch::Tensor F = torch::one_hot(torch::tensor(5), 27).to(torch::kFloat32);
-	std::cout << F.t().unsqueeze(0).mm(C) << std::endl;
-
-	torch::Tensor Embeddings = torch::zeros({ static_cast<long>(context_vector.size()), blockSize, C.size(1)}, torch::kFloat32);
-
-	rowCount = 0;
-	for (auto cv : context_vector)
-	{
-		int colCount = 0;
-
-		for (auto c : cv)
-		{
-			X[rowCount][colCount] = mm.Stoi()[c];
-			Embeddings[rowCount][colCount] = C[mm.Stoi()[c]];
-			colCount++;
-		}
-
-		rowCount++;
-	}
+	auto g = torch::Generator();
 	
-	std::cout << X[13][2] << std::endl;
-	std::cout << C[1] << std::endl;
-	std::cout << Embeddings[13][2] << std::endl;
+	torch::Tensor C = torch::randn({27, 2}, torch::kFloat32);
+	C.set_requires_grad(true);
+	
+	torch::Tensor W1 = torch::randn({ 6, 100 }, torch::kFloat32); 
+	W1.set_requires_grad(true);
+	torch::Tensor b1 = torch::randn(100, torch::kFloat32); 
+	b1.set_requires_grad(true);
+	torch::Tensor W2 = torch::randn({ 100,27 }, torch::kFloat32);
+	W2.set_requires_grad(true);
+	torch::Tensor b2 = torch::randn(27, torch::kFloat32);
+	b2.set_requires_grad(true);
 
-	torch::Tensor W1 = torch::randn({ 6, 100 });
-	torch::Tensor b = torch::randn({ 100 });
+	//Embeddings.set_requires_grad(true);
+
+	try
+	{
+
+		for (int run = 0; run < 10; run++)
+		{
+			torch::Tensor Embeddings = torch::zeros({ static_cast<long>(context_vector.size()), blockSize, C.size(1) }, torch::kFloat32);
+
+			rowCount = 0;
+			for (auto cv : context_vector)
+			{
+				int colCount = 0;
+
+				for (auto c : cv)
+				{
+					torch::Tensor s = C[mm.Stoi()[c]];
+					Embeddings[rowCount][colCount] = s;
+					colCount++;
+				}
+
+				rowCount++;
+			}
+
+			torch::Tensor h = torch::tanh(torch::mm(Embeddings.view({ 32,6 }), W1) + b1);
+			torch::Tensor logits = torch::mm(h, W2) + b2;
+			//torch::Tensor counts = logits.exp();
+			//torch::Tensor prob = counts / counts.sum(1, true);
+			//torch::Tensor probsY = torch::zeros({ static_cast<long>(context_vector.size()) }, torch::kFloat32);
+			//torch::Tensor loss = -prob.index({ torch::arange((int)context_vector.size(), torch::kInt64), Y }).log().mean();// +0.01 * torch::mm(W, W).mean();
+			torch::Tensor loss = torch::nn::functional::cross_entropy(logits, Y, torch::nn::functional::CrossEntropyFuncOptions().reduction(torch::kMean));
+
+			std::cout << "Loss is: " << loss << std::endl;
+
+			loss.backward();
+
+			W1.set_data(W1.data() - 0.1 * W1.grad());
+			W1.grad().zero_();
+			W2.set_data(W2.data() - 0.1 * W2.grad());
+			W2.grad().zero_();
+			b1.set_data(b1.data() - 0.1 * b1.grad());
+			b1.grad().zero_();
+			b2.set_data(b2.data() - 0.1 * b2.grad());
+			b2.grad().zero_();
+			C.set_data(C.data() - 0.1 * C.grad());
+			C.grad().zero_();
+
+		}
+	}
+	catch (const c10::Error &e)
+	{
+		std::cout << e.msg() << std::endl;
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 
 
 
-	auto t = torch::cat({ Embeddings.index({torch::indexing::Slice(), 0, torch::indexing::Slice()}),
-						Embeddings.index({ torch::indexing::Slice(), 1, torch::indexing::Slice() }),
-						Embeddings.index({ torch::indexing::Slice(), 2, torch::indexing::Slice() }) }, 1);
-
-	std::cout << "t sizes" << t.sizes() << std::endl;
-	std::cout << t << std::endl;
 
 	return 0;
 }
