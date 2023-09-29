@@ -35,3 +35,11 @@ https://pytorch.org/cppdocs/notes/tensor_indexing.html
 	can be replaced with
 
 	torch::Tensor loss = torch::nn::functional::cross_entropy(logits, Y, torch::nn::functional::CrossEntropyFuncOptions().reduction(torch::kMean));
+
+
+4  Learn learning rate
+
+	auto lre = torch::linspace(-3,0,500);
+			lre = torch::pow(10, lre);
+
+			float learningRate = lre.index({ run }).item<float>();
