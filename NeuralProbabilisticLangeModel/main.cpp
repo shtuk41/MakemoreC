@@ -8,6 +8,9 @@ int main()
 	Makemore mm;
 	mm.Init("..\\SolutionItems\\names.txt", std::nullopt);
 
+	const int hiddenLyerSize = 400;
+	const int embeddingSize = 20;
+
 	//context length: how many character do we take to prdict the next one
 	int blockSize = 3;
 	
@@ -44,19 +47,19 @@ int main()
 	{
 		auto g = torch::Generator();
 
-		torch::Tensor C = torch::randn({ 27, 2 }, torch::kFloat32);
+		torch::Tensor C = torch::randn({ 27, embeddingSize }, torch::kFloat32);
 		C.set_requires_grad(true);
 
-		torch::Tensor W1 = torch::randn({ 6, 100 }, torch::kFloat32);
+		torch::Tensor W1 = torch::randn({ blockSize * embeddingSize, hiddenLyerSize }, torch::kFloat32) * 0.1;
 		W1.set_requires_grad(true);
-		torch::Tensor b1 = torch::randn(100, torch::kFloat32);
+		torch::Tensor b1 = torch::randn(hiddenLyerSize, torch::kFloat32) * 0.01;
 		b1.set_requires_grad(true);
-		torch::Tensor W2 = torch::randn({ 100,27 }, torch::kFloat32);
+		torch::Tensor W2 = torch::randn({ hiddenLyerSize,27 }, torch::kFloat32) * 0.1;
 		W2.set_requires_grad(true);
-		torch::Tensor b2 = torch::randn(27, torch::kFloat32);
+		torch::Tensor b2 = torch::randn(27, torch::kFloat32) * 0;
 		b2.set_requires_grad(true);
 
-		for (int run = 0; run < 50001; run++)
+		for (int run = 0; run < 10000; run++)
 		{
 			auto ix = torch::randint(0, context_vector.size(), { 32, });
 
@@ -81,7 +84,7 @@ int main()
 				rowCount++;
 			}
 
-			torch::Tensor h = torch::tanh(torch::mm(Embeddings.view({ 32,6 }), W1) + b1);
+			torch::Tensor h = torch::tanh(torch::mm(Embeddings.view({ 32, blockSize * embeddingSize }), W1) + b1);
 			torch::Tensor logits = torch::mm(h, W2) + b2;
 			//torch::Tensor counts = logits.exp();
 			//torch::Tensor prob = counts / counts.sum(1, true);
@@ -89,7 +92,7 @@ int main()
 			//torch::Tensor loss = -prob.index({ torch::arange((int)context_vector.size(), torch::kInt64), Y }).log().mean();// +0.01 * torch::mm(W, W).mean();
 			torch::Tensor loss = torch::nn::functional::cross_entropy(logits, Y, torch::nn::functional::CrossEntropyFuncOptions().reduction(torch::kMean));
 
-			if (run % 10000 == 0)
+			if (run % 100 == 0)
 			{
 				std::cout << "Run: " << run << " Loss is : " << loss.item() << std::endl;
 			}
@@ -130,7 +133,7 @@ int main()
 			rowCount++;
 		}
 
-		torch::Tensor h = torch::tanh(torch::mm(Embeddings.view({ static_cast<long>(context_vector.size()), 6 }), W1) + b1);
+		torch::Tensor h = torch::tanh(torch::mm(Embeddings.view({ static_cast<long>(context_vector.size()), blockSize * embeddingSize }), W1) + b1);
 		torch::Tensor logits = torch::mm(h, W2) + b2;
 		torch::Tensor loss = torch::nn::functional::cross_entropy(logits, Y, torch::nn::functional::CrossEntropyFuncOptions().reduction(torch::kMean));
 
