@@ -1,2 +1,2 @@
 # MakemoreC
-Implementation of Andrej Karpathy's Makemore characeter level language model in C++ for educational purposes
+Implementation of Andrej Karpathy's Makemore character level language model in C++ and libtorch for educational purposes
