@@ -8,7 +8,7 @@ int main()
 	Makemore mm;
 	mm.Init("..\\SolutionItems\\names.txt", std::nullopt);
 
-	const int hiddenLyerSize = 400;
+	const int hiddenLyerSize = 100;
 	const int embeddingSize = 20;
 
 	//context length: how many character do we take to prdict the next one
@@ -50,16 +50,21 @@ int main()
 		torch::Tensor C = torch::randn({ 27, embeddingSize }, torch::kFloat32);
 		C.set_requires_grad(true);
 
-		torch::Tensor W1 = torch::randn({ blockSize * embeddingSize, hiddenLyerSize }, torch::kFloat32) * 0.1;
+		torch::Tensor W1 = torch::randn({ blockSize * embeddingSize, hiddenLyerSize }, torch::kFloat32) * (5/3) / powf(blockSize * embeddingSize, 0.5);
 		W1.set_requires_grad(true);
-		torch::Tensor b1 = torch::randn(hiddenLyerSize, torch::kFloat32) * 0.01;
-		b1.set_requires_grad(true);
+		//torch::Tensor b1 = torch::randn(hiddenLyerSize, torch::kFloat32) * 0.01;
+		//b1.set_requires_grad(true);
 		torch::Tensor W2 = torch::randn({ hiddenLyerSize,27 }, torch::kFloat32) * 0.1;
 		W2.set_requires_grad(true);
 		torch::Tensor b2 = torch::randn(27, torch::kFloat32) * 0;
 		b2.set_requires_grad(true);
 
-		for (int run = 0; run < 10000; run++)
+		auto bngain = torch::ones({ 1, hiddenLyerSize });
+		bngain.set_requires_grad(true);
+		auto bnbias = torch::ones({ 1, hiddenLyerSize });
+		bnbias.set_requires_grad(true);
+
+		for (int run = 0; run < 20000; run++)
 		{
 			auto ix = torch::randint(0, context_vector.size(), { 32, });
 
@@ -84,8 +89,11 @@ int main()
 				rowCount++;
 			}
 
-			torch::Tensor h = torch::tanh(torch::mm(Embeddings.view({ 32, blockSize * embeddingSize }), W1) + b1);
-			torch::Tensor logits = torch::mm(h, W2) + b2;
+			torch::Tensor hpreact = torch::mm(Embeddings.view({ 32, blockSize * embeddingSize }), W1) /* + b1*/;
+			//make every neuron guassian
+			hpreact = bngain * (hpreact - hpreact.mean(0, true)) / hpreact.std(0, true) + bnbias;
+			hpreact = torch::tanh(hpreact);
+			torch::Tensor logits = torch::mm(hpreact, W2) + b2;
 			//torch::Tensor counts = logits.exp();
 			//torch::Tensor prob = counts / counts.sum(1, true);
 			//torch::Tensor probsY = torch::zeros({ static_cast<long>(context_vector.size()) }, torch::kFloat32);
@@ -105,12 +113,16 @@ int main()
 			W1.grad().zero_();
 			W2.set_data(W2.data() - learningRate * W2.grad());
 			W2.grad().zero_();
-			b1.set_data(b1.data() - learningRate * b1.grad());
-			b1.grad().zero_();
+			//b1.set_data(b1.data() - learningRate * b1.grad());
+			//b1.grad().zero_();
 			b2.set_data(b2.data() - learningRate * b2.grad());
 			b2.grad().zero_();
 			C.set_data(C.data() - learningRate * C.grad());
 			C.grad().zero_();
+			bngain.set_data(bngain.data() - learningRate * bngain.grad());
+			bngain.grad().zero_();
+			bnbias.set_data(bnbias.data() - learningRate * bnbias.grad());
+			bnbias.grad().zero_();
 		}
 
 		torch::Tensor Embeddings = torch::zeros({ static_cast<long>(context_vector.size()), blockSize, C.size(1) }, torch::kFloat32);
@@ -133,8 +145,10 @@ int main()
 			rowCount++;
 		}
 
-		torch::Tensor h = torch::tanh(torch::mm(Embeddings.view({ static_cast<long>(context_vector.size()), blockSize * embeddingSize }), W1) + b1);
-		torch::Tensor logits = torch::mm(h, W2) + b2;
+		torch::Tensor hpreact = torch::mm(Embeddings.view({ static_cast<long>(context_vector.size()), blockSize * embeddingSize }), W1) /* + b1*/;
+		hpreact = bngain * (hpreact - hpreact.mean(0, true)) / hpreact.std(0, true) + bnbias;
+		hpreact = torch::tanh(hpreact);
+		torch::Tensor logits = torch::mm(hpreact, W2) + b2;
 		torch::Tensor loss = torch::nn::functional::cross_entropy(logits, Y, torch::nn::functional::CrossEntropyFuncOptions().reduction(torch::kMean));
 
 		std::cout << "Full Loss is: " << loss << std::endl;
@@ -157,7 +171,9 @@ int main()
 					emb[n] = C[mm.Stoi()[context[n]]];
 				}
 
-				torch::Tensor lh = torch::tanh(torch::mm(emb.view({ 1, -1 }), W1) + b1);
+				torch::Tensor lh = torch::mm(emb.view({ 1, -1 }), W1) /* + b1*/;
+				lh = bngain * (lh - torch::mean(lh)) / torch::std(lh) + bnbias;
+				lh = torch::tanh(lh);
 				torch::Tensor llogits = torch::mm(lh, W2) + b2;
 				torch::Tensor lprobs = torch::softmax(llogits, 1);
 				int lix = torch::multinomial(lprobs, 1, true).item<int>();
@@ -178,7 +194,7 @@ int main()
 
 		Embeddings.reset();
 		Y.reset();
-		h.reset();
+		hpreact.reset();
 		logits.reset();
 		loss.reset();
 
