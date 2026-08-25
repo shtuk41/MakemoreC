@@ -51,7 +51,7 @@ add_custom_command(TARGET MakemoreC POST_BUILD
 )
 
 if(WIN32)
-	target_compile_features(MicrogradC.Test PRIVATE cxx_std_20)
+	target_compile_features(MakemoreC PRIVATE cxx_std_20)
 
 	set_target_properties(MakemoreC PROPERTIES
     		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/x64/$<CONFIG>"

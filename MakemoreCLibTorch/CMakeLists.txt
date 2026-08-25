@@ -1,5 +1,11 @@
 set(TORCH_DLL_DIR "${Torch_DIR}/../../../lib")
-file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.so")
+
+if(WIN32)
+	file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.dll")
+elseif(LINUX)
+	file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.so")
+endif()
+
 
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
@@ -66,7 +72,7 @@ endif()
 
 
 if(WIN32)
-	target_compile_features(MicrogradC.Test PRIVATE cxx_std_20)
+	target_compile_features(MakemoreCLibTorch PRIVATE cxx_std_20)
 
     set_target_properties(MakemoreCLibTorch PROPERTIES
     		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/x64/$<CONFIG>"
