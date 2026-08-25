@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <list>
 #include <map>
 #include <optional>
@@ -9,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <filesystem>
 
 //bool comp(std::pair<std::pair<char, char>, int> a, std::pair<std::pair<char, char>, int> b) {
 //	return a.second < b.second;
@@ -60,9 +62,9 @@ public:
 	int** N() { return n; }
 
 
-	void Init(std::string fileNames, std::optional<int> wordToReads)
+	void Init(std::string fileNamesPath, std::optional<int> wordToReads)
 	{
-		std::ifstream namesFile(fileNames);
+		std::ifstream namesFile(fileNamesPath.c_str());
 
 		if (namesFile.is_open())
 		{

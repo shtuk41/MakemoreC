@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.16)
+
+option(BUILD_TESTING "Build the test suite" ON)
+
+#if(NOT DEFINED CUDAToolkit_ROOT AND WIN32)
+    # Check common installation path on Windows
+#    set(CUDA_13_3_PATH "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.3")
+#    if(EXISTS "${CUDA_13_3_PATH}")
+#        set(CUDAToolkit_ROOT "${CUDA_13_3_PATH}" CACHE PATH "Path to CUDA 13.3 Toolkit")
+#        message(STATUS "Auto-detected CUDA 13.3 at: ${CUDAToolkit_ROOT}")
+#    endif()
+#endif()
+
+if(BUILD_TESTING)
+    set(VCPKG_MANIFEST_FEATURES "tests" CACHE STRING "" FORCE)
+else()
+    set(VCPKG_MANIFEST_FEATURES "" CACHE STRING "" FORCE)
+endif()
+
+#VCPGK
+
+set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+set(VCPKG_USE_SYSTEM_BINARIES ON CACHE BOOL "" FORCE)
+set(VCPKG_FORCE_SYSTEM_BINARIES ON CACHE BOOL "" FORCE)
+
+project(MakemoreC VERSION 0.1 LANGUAGES CXX)
+
+set(Torch_DIR "D:/Files/MakemoreC/ThirdParty/libtorch-win-shared-with-deps-2.13.0+cpu/libtorch/share/cmake/Torch")
+
+find_package(Torch CONFIG REQUIRED)
+
+
+add_subdirectory(MakemoreCLibTorch)
+add_subdirectory(NeuralProbabilisticLanguageModel)
+
+if(BUILD_TESTING)
+    enable_testing()
+	add_subdirectory(MakemoreC)
+endif()
+
+

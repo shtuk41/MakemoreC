@@ -1,13 +1,13 @@
-#include "pch.h"
+#include <gtest/gtest.h>
+
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <random>
 #include <memory>
-#include <fstream>
 
 #include <functional.h>
-#include <Makemore.h>
+#include <MakemoreC.h>
 #include <neuron.h>
 #include <trace.h>
 

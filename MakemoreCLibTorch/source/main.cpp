@@ -1,11 +1,11 @@
 #include <torch/torch.h>
 #include <iostream>
-#include <Makemore.h>
+#include <MakemoreC.h>
 
 int main()
 {
 	Makemore mm;
-	mm.Init("..\\SolutionItems\\names.txt", std::nullopt);
+	mm.Init("names.txt", std::nullopt);
 
 	std::vector<int> xs, ys;
 

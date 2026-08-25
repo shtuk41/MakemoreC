@@ -1,12 +1,12 @@
 #include <torch/torch.h>
 #include <iostream>
 #include <string>
-#include <Makemore.h>
+#include <MakemoreC.h>
 
 int main()
 {
 	Makemore mm;
-	mm.Init("..\\SolutionItems\\names.txt", std::nullopt);
+	mm.Init("names.txt", std::nullopt);
 
 	const int hiddenLyerSize = 100;
 	const int embeddingSize = 20;
