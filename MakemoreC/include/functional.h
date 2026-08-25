@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <exception>
+#include <stdexcept>
 
 template <std::size_t numberOfClasses>
 std::array<double, numberOfClasses> one_hot(int num)
@@ -35,7 +37,7 @@ std::array<std::array<double, numberOfClasses>, numberOfInputs> one_hot(const st
 
 		if (ii >= numberOfClasses)
 		{
-			throw std::exception("out of bound in one_hot");
+			throw std::runtime_error("out of bound in one_hot");
 		}
 
 		hot[ii] = 1.0f;

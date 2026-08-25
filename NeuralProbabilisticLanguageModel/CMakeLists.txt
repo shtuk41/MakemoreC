@@ -1,5 +1,10 @@
 set(TORCH_DLL_DIR "${Torch_DIR}/../../../lib")
+
+if(WIN32)
 file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.dll")
+elseif(LINUX)
+file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.so")
+endif()
 
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
@@ -34,6 +39,7 @@ target_link_libraries(NeuralProbabilisticLanguageModel PRIVATE
 
 target_compile_features(NeuralProbabilisticLanguageModel PRIVATE cxx_std_20)
 
+if(WIN32)
 add_custom_command(TARGET NeuralProbabilisticLanguageModel POST_BUILD
 
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/items/names.txt" "${CMAKE_SOURCE_DIR}/build/NeuralProbabilisticLanguageModel/names.txt"
@@ -49,8 +55,19 @@ add_custom_command(TARGET NeuralProbabilisticLanguageModel POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TORCH_DLLS} "${CMAKE_BINARY_DIR}/x64/$<CONFIG>"
     COMMENT "Deploying runtime DLL dependencies relative to Torch_DIR..."
 )
+elseif(LINUX)
+add_custom_command(TARGET NeuralProbabilisticLanguageModel POST_BUILD
 
+     	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/items/names.txt" "${CMAKE_BINARY_DIR}/bin/names.txt"
+    	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/items/names1000.txt" "${CMAKE_BINARY_DIR}/bin/names1000.txt"
 
+    # Copy shaders directory to both locations
+	#COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TORCH_DLLS} "${CMAKE_BINARY_DIR}/bin"
+    	COMMENT "Deploying runtime SO dependencies relative to Torch_DIR..."
+)
+endif()
+
+if(WIN32)
 set_target_properties(NeuralProbabilisticLanguageModel PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/x64/$<CONFIG>"
     #RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/build/bin"
@@ -59,6 +76,18 @@ set_target_properties(NeuralProbabilisticLanguageModel PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
+elseif(LINUX)
+	set(CMAKE_CXX_STANDARD 20)
+	set(CMAKE_CXX_STANDARD_REQUIRED ON)
+	set(CMAKE_CXX_EXTENSIONS OFF)
+	
+	set_target_properties(NeuralProbabilisticLanguageModel PROPERTIES
+	    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+	    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin"
+	    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
+	)
+endif()
+
 
 
 

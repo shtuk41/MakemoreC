@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
+if(LINUX) 
+	set(CMAKE_C_COMPILER "/usr/bin/gcc" CACHE PATH "" FORCE)
+	set(CMAKE_CXX_COMPILER "/usr/bin/g++" CACHE PATH "" FORCE)
+endif()
+
 option(BUILD_TESTING "Build the test suite" ON)
 
 #if(NOT DEFINED CUDAToolkit_ROOT AND WIN32)
@@ -19,13 +24,18 @@ endif()
 
 #VCPGK
 
-set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+if(WIN32)
+	set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+elseif(LINUX)
+	set(CMAKE_TOOLCHAIN_FILE "~/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+endif()
+
 set(VCPKG_USE_SYSTEM_BINARIES ON CACHE BOOL "" FORCE)
 set(VCPKG_FORCE_SYSTEM_BINARIES ON CACHE BOOL "" FORCE)
 
 project(MakemoreC VERSION 0.1 LANGUAGES CXX)
 
-set(Torch_DIR "D:/Files/MakemoreC/ThirdParty/libtorch-win-shared-with-deps-2.13.0+cpu/libtorch/share/cmake/Torch")
+set(Torch_DIR "~/Files/MakemoreC/ThirdParty/libtorch-shared-with-deps-2.13.0+cpu/libtorch/share/cmake/Torch")
 
 find_package(Torch CONFIG REQUIRED)
 

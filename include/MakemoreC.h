@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <exception>
 #include <fstream>
 #include <list>
 #include <map>
@@ -7,6 +9,7 @@
 #include <random>
 #include <ranges>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -186,7 +189,7 @@ public:
 				return ii.first;
 		}
 
-		throw std::exception(std::string(std::string("itos, num not found: ") + std::to_string(num)).c_str());
+		throw std::runtime_error(std::string(std::string("itos, num not found: ") + std::to_string(num)).c_str());
 	}
 
 	int SampleRow(int rowNumber)
