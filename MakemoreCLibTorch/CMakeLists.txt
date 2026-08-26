@@ -36,6 +36,9 @@ target_include_directories(MakemoreCLibTorch PRIVATE
 
 target_link_libraries(MakemoreCLibTorch PRIVATE 
 	${TORCH_LIBRARIES}
+	CUDA::cudart
+	CUDA::cublas
+	CUDA::cufft
 )
 
 target_compile_features(MakemoreCLibTorch PRIVATE cxx_std_20)

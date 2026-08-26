@@ -7,14 +7,19 @@ endif()
 
 option(BUILD_TESTING "Build the test suite" ON)
 
-#if(NOT DEFINED CUDAToolkit_ROOT AND WIN32)
-    # Check common installation path on Windows
-#    set(CUDA_13_3_PATH "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.3")
-#    if(EXISTS "${CUDA_13_3_PATH}")
-#        set(CUDAToolkit_ROOT "${CUDA_13_3_PATH}" CACHE PATH "Path to CUDA 13.3 Toolkit")
-#        message(STATUS "Auto-detected CUDA 13.3 at: ${CUDAToolkit_ROOT}")
-#    endif()
-#endif()
+if(WIN32)
+	if(NOT DEFINED CUDAToolkit_ROOT AND WIN32)
+	    # Check common installation path on Windows
+	    set(CUDA_13_3_PATH "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v13.3")
+	    if(EXISTS "${CUDA_13_3_PATH}")
+		set(CUDAToolkit_ROOT "${CUDA_13_3_PATH}" CACHE PATH "Path to CUDA 13.3 Toolkit")
+		message(STATUS "Auto-detected CUDA 13.3 at: ${CUDAToolkit_ROOT}")
+	    endif()
+	endif()
+elseif(LINUX)
+	set(CUDA_13_3_PATH "/usr/local/cuda-13.3")
+	set(CMAKE_CUDA_COMPILER "${CUDA_13_3_PATH}/bin/nvcc")
+endif()
 
 if(BUILD_TESTING)
     set(VCPKG_MANIFEST_FEATURES "tests" CACHE STRING "" FORCE)
@@ -38,11 +43,13 @@ project(MakemoreC VERSION 0.1 LANGUAGES CXX)
 if(WIN32)
 	set(Torch_DIR "D:/Files/MakemoreC/ThirdParty/libtorch-win-shared-with-deps-2.13.0+cpu/libtorch/share/cmake/Torch")
 elseif(LINUX)
-	set(Torch_DIR "~/Files/MakemoreC/ThirdParty/libtorch-shared-with-deps-2.13.0+cpu/libtorch/share/cmake/Torch")
+	#set(Torch_DIR "~/Files/MakemoreC/ThirdParty/libtorch-shared-with-deps-2.13.0+cpu/libtorch/share/cmake/Torch")
+	set(Torch_DIR "~/Files/MakemoreC/ThirdParty/libtorch-shared-with-deps-2.13.0+cu132/libtorch/share/cmake/Torch")
 endif()
 
 
 find_package(Torch CONFIG REQUIRED)
+find_package(CUDAToolkit 13.3 REQUIRED)
 
 
 add_subdirectory(MakemoreCLibTorch)
@@ -50,7 +57,7 @@ add_subdirectory(NeuralProbabilisticLanguageModel)
 
 if(BUILD_TESTING)
     enable_testing()
-	add_subdirectory(MakemoreC)
+    add_subdirectory(MakemoreC)
 endif()
 
 
