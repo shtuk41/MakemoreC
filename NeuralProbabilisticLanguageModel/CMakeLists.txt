@@ -1,4 +1,4 @@
-set(TORCH_DLL_DIR "${Torch_DIR}/../../../lib")
+set(TORCH_DLL_DIR "${TORCH_INSTALL_PREFIX}/lib")
 
 if(WIN32)
 file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.dll")
@@ -62,7 +62,7 @@ add_custom_command(TARGET NeuralProbabilisticLanguageModel POST_BUILD
     	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/items/names1000.txt" "${CMAKE_BINARY_DIR}/bin/names1000.txt"
 
     # Copy shaders directory to both locations
-	#COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TORCH_DLLS} "${CMAKE_BINARY_DIR}/bin"
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TORCH_DLLS} "${CMAKE_BINARY_DIR}/bin"
     	COMMENT "Deploying runtime SO dependencies relative to Torch_DIR..."
 )
 endif()

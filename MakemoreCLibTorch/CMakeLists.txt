@@ -1,11 +1,11 @@
-set(TORCH_DLL_DIR "${Torch_DIR}/../../../lib")
+
+set(TORCH_DLL_DIR "${TORCH_INSTALL_PREFIX}/lib")
 
 if(WIN32)
 	file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.dll")
 elseif(LINUX)
-	file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.so")
+	file(GLOB TORCH_DLLS "${TORCH_DLL_DIR}/*.so*")
 endif()
-
 
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
@@ -63,7 +63,7 @@ elseif(LINUX)
 
 
     # Copy shaders directory to both locations
-	#COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TORCH_DLLS} "${CMAKE_BINARY_DIR}/bin"
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${TORCH_DLLS} "${CMAKE_BINARY_DIR}/bin"
     	COMMENT "Deploying linux  runtime SO dependencies relative to Torch_DIR..."
 )
 endif()
