@@ -35,6 +35,9 @@ target_include_directories(NeuralProbabilisticLanguageModel PRIVATE
 
 target_link_libraries(NeuralProbabilisticLanguageModel PRIVATE 
 	"${TORCH_LIBRARIES}"
+	CUDA::cudart
+	CUDA::cublas
+	CUDA::cufft
 )
 
 target_compile_features(NeuralProbabilisticLanguageModel PRIVATE cxx_std_20)
